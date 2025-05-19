@@ -86,7 +86,7 @@ namespace OnlineClothingStore.Controllers
         {
             var product = Products.FirstOrDefault(p => p.Id == id);
 
-            if (product == null)
+            if (product is null)
                 return NotFound();
 
             var category = CategoryController.Categories.FirstOrDefault(c => c.Id == product.CategoryId);
@@ -112,7 +112,7 @@ namespace OnlineClothingStore.Controllers
         {
             var category = CategoryController.Categories.FirstOrDefault(c => c.Id == productDTO.CategoryId);
 
-            if (category == null)
+            if (category is null)
                 return NotFound();
 
             var product = new Product
@@ -137,12 +137,12 @@ namespace OnlineClothingStore.Controllers
         {
             var product = Products.FirstOrDefault(p => p.Id == id);
 
-            if (product == null)
+            if (product is null)
                 return NotFound();
 
             var category = CategoryController.Categories.FirstOrDefault(c => c.Id == updatedProduct.CategoryId);
 
-            if (category == null)
+            if (category is null)
                 return NotFound();
 
             product.Name = updatedProduct.Name;
@@ -161,7 +161,7 @@ namespace OnlineClothingStore.Controllers
         {
             var product = Products.FirstOrDefault(p => p.Id == id);
 
-            if (product == null) return NotFound();
+            if (product is null) return NotFound();
 
             Products.Remove(product);
 
@@ -175,7 +175,7 @@ namespace OnlineClothingStore.Controllers
         public ActionResult<List<ProductVariant>> GetProductVariants([FromRoute] int productId)
         {
             var product = Products.FirstOrDefault(p => p.Id == productId);
-            if (product == null)
+            if (product is null)
                 return NotFound();
 
             var variants = ProductVariants.Where(pv => pv.ProductId == productId).ToList();
@@ -190,7 +190,7 @@ namespace OnlineClothingStore.Controllers
         {
             var product = Products.FirstOrDefault(p => p.Id == productId);
 
-            if (product == null)
+            if (product is null)
                 return NotFound();
 
             var productVariant = new ProductVariant()
@@ -218,7 +218,7 @@ namespace OnlineClothingStore.Controllers
             var variant = ProductVariants
                 .FirstOrDefault(pv => pv.Id == variantId && pv.ProductId == productId);
 
-            if (variant == null)
+            if (variant is null)
                 return NotFound();
 
             variant.Size = updateDto.Size;
@@ -237,7 +237,7 @@ namespace OnlineClothingStore.Controllers
             var variant = ProductVariants
                 .FirstOrDefault(pv => pv.Id == variantId && pv.ProductId == productId);
 
-            if (variant == null)
+            if (variant is null)
                 return NotFound();
 
             ProductVariants.Remove(variant);

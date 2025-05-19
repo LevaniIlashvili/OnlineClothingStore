@@ -43,7 +43,7 @@ namespace OnlineClothingStore.Controllers
         public ActionResult<Order> CreateOrder([FromRoute] int userId, [FromBody] AddOrderDTO orderDTO)
         {
             var cart = CartController.Carts.FirstOrDefault(c => c.UserId == userId);
-            if (cart == null)
+            if (cart is null)
                 return NotFound();
 
             var orderId = Orders.Any() ? Orders.Max(o => o.Id) + 1 : 1;
@@ -89,7 +89,7 @@ namespace OnlineClothingStore.Controllers
             }
 
             var order = Orders.FirstOrDefault(o => o.Id == orderId);
-            if (order == null)
+            if (order is null)
                 return NotFound();
 
             order.Status = parsedStatus;

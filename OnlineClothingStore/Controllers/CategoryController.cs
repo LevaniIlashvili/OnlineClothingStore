@@ -32,7 +32,7 @@ namespace OnlineClothingStore.Controllers
         {
             var category = Categories.FirstOrDefault(c => c.Id == id);
 
-            if (category == null)
+            if (category is null)
                 return NotFound();
 
             return Ok(category);
@@ -63,7 +63,7 @@ namespace OnlineClothingStore.Controllers
         {
             var category = Categories.FirstOrDefault(c => c.Id == id);
 
-            if (category == null)
+            if (category is null)
                 return NotFound();
 
             category.Name = updatedCategory.Name;
@@ -79,7 +79,7 @@ namespace OnlineClothingStore.Controllers
         {
             var category = Categories.FirstOrDefault(c => c.Id == id);
 
-            if (category == null)
+            if (category is null)
                 return NotFound();
 
             Categories.Remove(category);

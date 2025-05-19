@@ -35,7 +35,7 @@ namespace OnlineClothingStore.Controllers
         public ActionResult<Cart> GetCart([FromRoute] int userId)
         {
             var cart = Carts.FirstOrDefault(c => c.UserId == userId);
-            if (cart == null)
+            if (cart is null)
                 return NotFound();
 
             return Ok(cart);
@@ -48,7 +48,7 @@ namespace OnlineClothingStore.Controllers
         public ActionResult<CartItem> AddCartItem([FromRoute] int userId, [FromBody] AddCartItemDTO cartItemDTO)
         {
             var cart = Carts.FirstOrDefault(c => c.UserId == userId);
-            if (cart == null)
+            if (cart is null)
                 return NotFound();
 
             var productVariant = ProductController.ProductVariants.FirstOrDefault(pv => {
@@ -57,7 +57,7 @@ namespace OnlineClothingStore.Controllers
                 pv.Size.Equals(cartItemDTO.Size, StringComparison.OrdinalIgnoreCase);
                 });
 
-            if (productVariant == null)
+            if (productVariant is null)
                 return NotFound();
 
             var cartItem = new CartItem
@@ -80,11 +80,11 @@ namespace OnlineClothingStore.Controllers
         public ActionResult UpdateCartItem([FromRoute] int userId, [FromRoute] int itemId, [FromBody] AddCartItemDTO cartItemDTO)
         {
             var cart = Carts.FirstOrDefault(c => c.UserId == userId);
-            if (cart == null)
+            if (cart is null)
                 return NotFound();
 
             var item = cart.Items.FirstOrDefault(i => i.Id == itemId);
-            if (item == null)
+            if (item is null)
                 return NotFound();
 
             var productVariant = ProductController.ProductVariants.FirstOrDefault(pv => {
@@ -93,7 +93,7 @@ namespace OnlineClothingStore.Controllers
                         && pv.Size.Equals(cartItemDTO.Size, StringComparison.OrdinalIgnoreCase);
             });
 
-            if (productVariant == null)
+            if (productVariant is null)
                 return NotFound();
 
             item.Quantity = cartItemDTO.Quantity;
@@ -108,11 +108,11 @@ namespace OnlineClothingStore.Controllers
         public ActionResult RemoveCartItem([FromRoute] int userId, [FromRoute] int itemId)
         {
             var cart = Carts.FirstOrDefault(c => c.UserId == userId);
-            if (cart == null)
+            if (cart is null)
                 return NotFound();
 
             var item = cart.Items.FirstOrDefault(i => i.Id == itemId);
-            if (item == null)
+            if (item is null)
                 return NotFound();
 
             cart.Items.Remove(item);
