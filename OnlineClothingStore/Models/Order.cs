@@ -11,11 +11,4 @@
 
         public List<OrderItem> Items { get; set; }  
     }
-
-    public enum OrderStatus
-    {
-        Processing,
-        Delivered,
-        Cancelled
-    }
 }
