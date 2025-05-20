@@ -15,7 +15,13 @@ namespace OnlineClothingStore.Controllers
             new User { Id = 3, FirstName = "Charlie", LastName = "Lee", Email = "charlie@example.com", PasswordHash = "hashed_pw_3", Role = "Customer" },
         };
 
+        /// <summary>
+        /// Creates a new user
+        /// </summary>
+        /// <param name="userDTO">The data of user being created</param>
+        /// <response code="200">User created successfully</response>
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public ActionResult RegisterUser(AddUserDTO userDTO)
         {
             var user = new User

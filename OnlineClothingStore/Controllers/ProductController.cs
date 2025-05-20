@@ -8,7 +8,7 @@ namespace OnlineClothingStore.Controllers
     [ApiController]
     public class ProductController : ControllerBase
     {
-        public static List<Product> Products = new List<Product> 
+        public static List<Product> Products = new List<Product>
         {
             new Product
             {
@@ -57,7 +57,9 @@ namespace OnlineClothingStore.Controllers
         /// <summary>
         /// Gets a list of all products with their category names
         /// </summary>
+        /// <response code="200">Returns the list of product DTOs</response>
         [HttpGet]
+        [ProducesResponseType(typeof(List<ProductDTO>), StatusCodes.Status200OK)]
         public ActionResult<List<ProductDTO>> GetProducts()
         {
             var producDTOs = Products.Select(p =>
@@ -81,7 +83,12 @@ namespace OnlineClothingStore.Controllers
         /// <summary>
         /// Gets a product by id
         /// </summary>
+        /// <param name="id">The id of the product to get</param>
+        /// <response code="200">Returns the requested product</response>
+        /// <response code="404">Product not found</response>
         [HttpGet("{id}")]
+        [ProducesResponseType(typeof(ProductDTO), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult<ProductDTO> GetProduct([FromRoute] int id)
         {
             var product = Products.FirstOrDefault(p => p.Id == id);
@@ -101,13 +108,18 @@ namespace OnlineClothingStore.Controllers
                 CategoryName = category.Name,
             };
 
-            return productDTO;
+            return Ok(productDTO);
         }
 
         /// <summary>
         /// Adds a new product
         /// </summary>
+        /// <param name="productDTO">The data of the product to add</param>
+        /// <response code="201">Product was created successfully</response>
+        /// <response code="404">Category not found</response>
         [HttpPost]
+        [ProducesResponseType(typeof(Product), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult<Product> AddProduct([FromBody] AddProductDTO productDTO)
         {
             var category = CategoryController.Categories.FirstOrDefault(c => c.Id == productDTO.CategoryId);
@@ -132,7 +144,13 @@ namespace OnlineClothingStore.Controllers
         /// <summary>
         /// Updates a product by id
         /// </summary>
+        /// <param name="id">The id of the product to update</param>
+        /// <param name="updatedProduct">The data of the updated product</param>
+        /// <response code="204">Product was updated successfully</response>
+        /// <response code="404">Product or category not found</response>
         [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult UpdateProduct([FromRoute] int id, [FromBody] AddProductDTO updatedProduct)
         {
             var product = Products.FirstOrDefault(p => p.Id == id);
@@ -156,7 +174,12 @@ namespace OnlineClothingStore.Controllers
         /// <summary>
         /// Deletes a product by id
         /// </summary>
+        /// <param name="id">The id of the product to delete</param>
+        /// <response code="204">Product was deleted successfully</response>
+        /// <response code="404">Product not found</response>
         [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult DeleteProduct([FromRoute] int id)
         {
             var product = Products.FirstOrDefault(p => p.Id == id);
@@ -171,7 +194,12 @@ namespace OnlineClothingStore.Controllers
         /// <summary>
         /// Gets all variants for a specific product
         /// </summary>
+        /// <param name="productId">The id of the product</param>
+        /// <response code="200">Returns list of product variants</response>
+        /// <response code="404">Product not found</response>
         [HttpGet("{productId}/variants")]
+        [ProducesResponseType(typeof(List<ProductVariant>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult<List<ProductVariant>> GetProductVariants([FromRoute] int productId)
         {
             var product = Products.FirstOrDefault(p => p.Id == productId);
@@ -185,7 +213,13 @@ namespace OnlineClothingStore.Controllers
         /// <summary>
         /// Adds a new variant for a specific product
         /// </summary>
+        /// <param name="productId">The id of the product</param>
+        /// <param name="addProductVariantDTO">The data of the variant to add</param>
+        /// <response code="201">Product variant was created successfully</response>
+        /// <response code="404">Product not found</response>
         [HttpPost("{productId}/variants")]
+        [ProducesResponseType(typeof(ProductVariant), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult<ProductVariant> AddProductVariant([FromRoute] int productId, [FromBody] AddProductVariantDTO addProductVariantDTO)
         {
             var product = Products.FirstOrDefault(p => p.Id == productId);
@@ -209,7 +243,14 @@ namespace OnlineClothingStore.Controllers
         /// <summary>
         /// Updates a variant for a specific product
         /// </summary>
+        /// <param name="productId">The id of the product</param>
+        /// <param name="variantId">The id of the variant</param>
+        /// <param name="updateDto">The updated variant data</param>
+        /// <response code="204">Product variant was updated successfully</response>
+        /// <response code="404">Product variant not found</response>
         [HttpPut("{productId}/variants/{variantId}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult UpdateProductVariant(
             [FromRoute] int productId,
             [FromRoute] int variantId,
@@ -231,7 +272,13 @@ namespace OnlineClothingStore.Controllers
         /// <summary>
         /// Deletes a variant of a specific product
         /// </summary>
+        /// <param name="productId">The id of the product</param>
+        /// <param name="variantId">The id of the variant</param>
+        /// <response code="204">Product variant was deleted successfully</response>
+        /// <response code="404">Product variant not found</response>
         [HttpDelete("{productId}/variants/{variantId}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult DeleteProductVariant([FromRoute] int productId, [FromRoute] int variantId)
         {
             var variant = ProductVariants

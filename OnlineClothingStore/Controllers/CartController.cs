@@ -31,7 +31,12 @@ namespace OnlineClothingStore.Controllers
         /// <summary>
         /// Gets the cart for a specific user
         /// </summary>
+        /// <param name="userId">The id of user to get cart for</param>
+        /// <response code="200">Returns the cart</response>
+        /// <response code="404">Resource not found</response>
         [HttpGet("{userId}")]
+        [ProducesResponseType(typeof(Cart), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult<Cart> GetCart([FromRoute] int userId)
         {
             var cart = Carts.FirstOrDefault(c => c.UserId == userId);
@@ -44,7 +49,13 @@ namespace OnlineClothingStore.Controllers
         /// <summary>
         /// Adds an item to user's cart
         /// </summary>
+        /// <param name="userId">The id of user whose cart is being updated</param>
+        /// <param name="cartItemDTO">The data of cart item to add</param>
+        /// <response code="201">Cart item was created</response>
+        /// <response code="404">Resource not found</response>
         [HttpPost("{userId}/items")]
+        [ProducesResponseType(typeof(CartItem), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult<CartItem> AddCartItem([FromRoute] int userId, [FromBody] AddCartItemDTO cartItemDTO)
         {
             var cart = Carts.FirstOrDefault(c => c.UserId == userId);
@@ -55,7 +66,7 @@ namespace OnlineClothingStore.Controllers
                 return pv.ProductId == cartItemDTO.ProductId &&
                 pv.Color.Equals(cartItemDTO.Color, StringComparison.OrdinalIgnoreCase) &&
                 pv.Size.Equals(cartItemDTO.Size, StringComparison.OrdinalIgnoreCase);
-                });
+            });
 
             if (productVariant is null)
                 return NotFound();
@@ -76,7 +87,14 @@ namespace OnlineClothingStore.Controllers
         /// <summary>
         /// Updates the quantity of a specific item in a user's cart
         /// </summary>
+        /// <param name="userId">The id of user whose cart item is being updated</param>
+        /// <param name="itemId">The id of cart item being updated</param>
+        /// <param name="cartItemDTO">The updated data for cart item</param>
+        /// <response code="204">Cart item was updated</response>
+        /// <response code="404">Resource not found</response>
         [HttpPut("{userId}/items/{itemId}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult UpdateCartItem([FromRoute] int userId, [FromRoute] int itemId, [FromBody] AddCartItemDTO cartItemDTO)
         {
             var cart = Carts.FirstOrDefault(c => c.UserId == userId);
@@ -88,8 +106,8 @@ namespace OnlineClothingStore.Controllers
                 return NotFound();
 
             var productVariant = ProductController.ProductVariants.FirstOrDefault(pv => {
-                return pv.ProductId == cartItemDTO.ProductId 
-                        && pv.Color.Equals(cartItemDTO.Color, StringComparison.OrdinalIgnoreCase) 
+                return pv.ProductId == cartItemDTO.ProductId
+                        && pv.Color.Equals(cartItemDTO.Color, StringComparison.OrdinalIgnoreCase)
                         && pv.Size.Equals(cartItemDTO.Size, StringComparison.OrdinalIgnoreCase);
             });
 
@@ -104,7 +122,13 @@ namespace OnlineClothingStore.Controllers
         /// <summary>
         /// Removes an item from user's cart
         /// </summary>
+        /// <param name="userId">The id of user whose cart item is being removed</param>
+        /// <param name="itemId">The id of cart item being removed</param>
+        /// <response code="204">Cart item was deleted</response>
+        /// <response code="404">Resource not found</response>
         [HttpDelete("{userId}/items/{itemId}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult RemoveCartItem([FromRoute] int userId, [FromRoute] int itemId)
         {
             var cart = Carts.FirstOrDefault(c => c.UserId == userId);

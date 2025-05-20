@@ -27,9 +27,12 @@ namespace OnlineClothingStore.Controllers
         };
 
         /// <summary>
-        /// Gets all orders for a specific user.
+        /// Gets all orders for a specific user
         /// </summary>
+        /// <param name="userId">The id of user to get orders for</param>
+        /// <response code="200">Returns the list of orders for the user</response>
         [HttpGet("user/{userId}")]
+        [ProducesResponseType(typeof(List<Order>), StatusCodes.Status200OK)]
         public ActionResult<List<Order>> GetOrdersForUser(int userId)
         {
             var userOrders = Orders.Where(o => o.UserId == userId).ToList();
@@ -39,7 +42,13 @@ namespace OnlineClothingStore.Controllers
         /// <summary>
         /// Creates a new order for a user using items from their cart
         /// </summary>
+        /// <param name="userId">The id of user to create order for</param>
+        /// <param name="orderDTO">Order details</param>
+        /// <response code="201">Order created successfully</response>
+        /// <response code="404">User's cart not found</response>
         [HttpPost("{userId}")]
+        [ProducesResponseType(typeof(Order), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult<Order> CreateOrder([FromRoute] int userId, [FromBody] AddOrderDTO orderDTO)
         {
             var cart = CartController.Carts.FirstOrDefault(c => c.UserId == userId);
@@ -80,7 +89,15 @@ namespace OnlineClothingStore.Controllers
         /// <summary>
         /// Updates the status of an existing order
         /// </summary>
+        /// <param name="orderId">The id of the order to update</param>
+        /// <param name="orderStatusDTO">The updated status</param>
+        /// <response code="204">Status updated successfully</response>
+        /// <response code="400">Invalid order status provided</response>
+        /// <response code="404">Order not found</response>
         [HttpPut("{orderId}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult UpdateOrderStatus(int orderId, UpdateOrderStatusDTO orderStatusDTO)
         {
             if (!Enum.TryParse(orderStatusDTO.OrderStatus, true, out OrderStatus parsedStatus))
