@@ -1,3 +1,6 @@
+USE OnlineClothingStore;
+GO
+
 SET IDENTITY_INSERT UserRole ON;
 INSERT INTO UserRole (Id, Name) VALUES
 (1, 'Admin'),
@@ -5,7 +8,7 @@ INSERT INTO UserRole (Id, Name) VALUES
 SET IDENTITY_INSERT UserRole OFF;
 
 SET IDENTITY_INSERT OrderStatus ON;
-INSERT INTO OrderStatus (Name) VALUES
+INSERT INTO OrderStatus (Id, Name) VALUES
 (1, 'Processing'),
 (2, 'Shipped'),
 (3, 'Delivered'),
@@ -13,7 +16,7 @@ INSERT INTO OrderStatus (Name) VALUES
 SET IDENTITY_INSERT OrderStatus OFF;
 
 SET IDENTITY_INSERT InventoryLogChangeType ON;
-INSERT INTO InventoryLogChangeType (Name) VALUES
+INSERT INTO InventoryLogChangeType (Id, Name) VALUES
 (1, 'Sale'),
 (2, 'Restock'),
 (3, 'Adjustment'),
