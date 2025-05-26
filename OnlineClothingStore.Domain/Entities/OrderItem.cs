@@ -1,6 +1,8 @@
-﻿namespace OnlineClothingStore.Domain.Entities
+﻿using OnlineClothingStore.Domain.Common;
+
+namespace OnlineClothingStore.Domain.Entities
 {
-    public class OrderItem
+    public class OrderItem : AuditableEntity
     {
         public long Id { get; set; }
         public long OrderId { get; set; }
