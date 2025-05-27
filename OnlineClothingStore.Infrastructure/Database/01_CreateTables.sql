@@ -3,17 +3,29 @@ GO
 
 CREATE TABLE UserRole(
 	Id BIGINT PRIMARY KEY IDENTITY(1,1),
-	Name NVARCHAR(50) NOT NULL UNIQUE
+	Name NVARCHAR(50) NOT NULL UNIQUE,
+	CreatedBy BIGINT,
+	CreatedAt DATETIME DEFAULT GETDATE(),
+	LastUpdatedBy BIGINT,
+	LastUpdatedAt DATETIME
 );
 
 CREATE TABLE OrderStatus(
 	Id BIGINT PRIMARY KEY IDENTITY(1,1),
-	Name NVARCHAR(50) NOT NULL UNIQUE
+	Name NVARCHAR(50) NOT NULL UNIQUE,
+	CreatedBy BIGINT,
+	CreatedAt DATETIME DEFAULT GETDATE(),
+	LastUpdatedBy BIGINT,
+	LastUpdatedAt DATETIME
 );
 
 CREATE TABLE InventoryLogChangeType(
 	Id BIGINT PRIMARY KEY IDENTITY(1,1),
-	Name NVARCHAR(50) NOT NULL UNIQUE
+	Name NVARCHAR(50) NOT NULL UNIQUE,
+	CreatedBy BIGINT,
+	CreatedAt DATETIME DEFAULT GETDATE(),
+	LastUpdatedBy BIGINT,
+	LastUpdatedAt DATETIME
 );
 
 CREATE TABLE [User](
@@ -24,20 +36,30 @@ CREATE TABLE [User](
 	PasswordHash NVARCHAR(255) NOT NULL,
 	PhoneNumber NVARCHAR(20),
 	RoleId BIGINT NOT NULL,
+	CreatedBy BIGINT,
 	CreatedAt DATETIME DEFAULT GETDATE(),
-	UpdatedAt DATETIME,
+	LastUpdatedBy BIGINT,
+	LastUpdatedAt DATETIME,
 	CONSTRAINT FK_User_UserRole FOREIGN KEY (RoleId) REFERENCES UserRole(Id)
 );
 
 CREATE TABLE Brand(
 	Id BIGINT PRIMARY KEY IDENTITY(1,1),
-	Name NVARCHAR(100) NOT NULL UNIQUE
+	Name NVARCHAR(100) NOT NULL UNIQUE,
+	CreatedBy BIGINT,
+	CreatedAt DATETIME DEFAULT GETDATE(),
+	LastUpdatedBy BIGINT,
+	LastUpdatedAt DATETIME
 );
 
 CREATE TABLE Category(
 	Id BIGINT PRIMARY KEY IDENTITY(1,1),
 	Name NVARCHAR(100) NOT NULL UNIQUE,
 	ParentCategoryId BIGINT,
+	CreatedBy BIGINT,
+	CreatedAt DATETIME DEFAULT GETDATE(),
+	LastUpdatedBy BIGINT,
+	LastUpdatedAt DATETIME,
 	CONSTRAINT FK_Category_ParentCategory FOREIGN KEY (ParentCategoryId) REFERENCES Category(Id)
 );
 
@@ -49,6 +71,10 @@ CREATE TABLE [Product](
 	SkuPrefix NVARCHAR(50) NOT NULL UNIQUE,
 	CategoryId BIGINT NOT NULL,
 	BrandId BIGINT NOT NULL,
+	CreatedBy BIGINT,
+	CreatedAt DATETIME DEFAULT GETDATE(),
+	LastUpdatedBy BIGINT,
+	LastUpdatedAt DATETIME,
 	CONSTRAINT FK_Product_Category FOREIGN KEY (CategoryId) REFERENCES Category(Id),
 	CONSTRAINT FK_Product_Brand FOREIGN KEY (BrandId) REFERENCES Brand(Id)
 );
@@ -57,16 +83,24 @@ CREATE TABLE ProductVariant(
 	Id BIGINT PRIMARY KEY IDENTITY(1,1),
 	ProductId BIGINT NOT NULL,
 	Size NVARCHAR(50) NOT NULL,
-	Color NVARCHAR(50)NOT NULL,
+	Color NVARCHAR(50) NOT NULL,
 	Sku NVARCHAR(100) NOT NULL UNIQUE,
-	StockQuantity INT NOT NULL CHECK (StockQuantity >=  0),
+	StockQuantity INT NOT NULL CHECK (StockQuantity >= 0),
 	ImageUrl NVARCHAR(255),
+	CreatedBy BIGINT,
+	CreatedAt DATETIME DEFAULT GETDATE(),
+	LastUpdatedBy BIGINT,
+	LastUpdatedAt DATETIME,
 	CONSTRAINT FK_ProductVariant_Product FOREIGN KEY (ProductId) REFERENCES [Product](Id)
 );
 
 CREATE TABLE Cart(
 	Id BIGINT PRIMARY KEY IDENTITY(1,1),
 	UserId BIGINT NOT NULL UNIQUE,
+	CreatedBy BIGINT,
+	CreatedAt DATETIME DEFAULT GETDATE(),
+	LastUpdatedBy BIGINT,
+	LastUpdatedAt DATETIME,
 	CONSTRAINT FK_Cart_User FOREIGN KEY (UserId) REFERENCES [User](Id)
 );
 
@@ -75,6 +109,10 @@ CREATE TABLE CartItem(
 	CartId BIGINT NOT NULL,
 	ProductVariantId BIGINT NOT NULL,
 	Quantity INT NOT NULL CHECK (Quantity > 0),
+	CreatedBy BIGINT,
+	CreatedAt DATETIME DEFAULT GETDATE(),
+	LastUpdatedBy BIGINT,
+	LastUpdatedAt DATETIME,
 	CONSTRAINT FK_CartItem_Cart FOREIGN KEY (CartId) REFERENCES Cart(Id),
 	CONSTRAINT FK_CartItem_ProductVariant FOREIGN KEY (ProductVariantId) REFERENCES ProductVariant(Id),
 	CONSTRAINT UQ_CartItem UNIQUE (CartId, ProductVariantId)
@@ -87,8 +125,10 @@ CREATE TABLE [Order](
 	OrderDate DATETIME NOT NULL DEFAULT GETDATE(),
 	TotalAmount DECIMAL(10,2) NOT NULL CHECK(TotalAmount > 0),
 	ShippingAddress NVARCHAR(MAX) NOT NULL,
-	CreatedAt DATETIME DEFAULT GETDATE(),	
-	UpdatedAt DATETIME,
+	CreatedBy BIGINT,
+	CreatedAt DATETIME DEFAULT GETDATE(),
+	LastUpdatedBy BIGINT,
+	LastUpdatedAt DATETIME,
 	CONSTRAINT FK_Order_User FOREIGN KEY (UserId) REFERENCES [User](Id),
 	CONSTRAINT FK_Order_OrderStatus FOREIGN KEY (OrderStatusId) REFERENCES OrderStatus(Id)
 );
@@ -99,6 +139,10 @@ CREATE TABLE OrderItem(
 	ProductVariantId BIGINT NOT NULL,
 	Quantity INT NOT NULL CHECK (Quantity > 0),
 	PriceAtPurchase DECIMAL(10,2) NOT NULL CHECK (PriceAtPurchase > 0),
+	CreatedBy BIGINT,
+	CreatedAt DATETIME DEFAULT GETDATE(),
+	LastUpdatedBy BIGINT,
+	LastUpdatedAt DATETIME,
 	CONSTRAINT FK_OrderItem_Order FOREIGN KEY (OrderId) REFERENCES [Order](Id),
 	CONSTRAINT FK_OrderItem_ProductVariant FOREIGN KEY (ProductVariantId) REFERENCES ProductVariant(Id)
 );
@@ -110,7 +154,10 @@ CREATE TABLE Payment(
 	Amount DECIMAL(10,2) NOT NULL CHECK (Amount > 0),
 	PaymentMethod NVARCHAR(50) NOT NULL,
 	TransactionId NVARCHAR(255) UNIQUE,
-	CreatedAt DATETIME NOT NULL DEFAULT GETDATE(),
+	CreatedBy BIGINT,
+	CreatedAt DATETIME DEFAULT GETDATE(),
+	LastUpdatedBy BIGINT,
+	LastUpdatedAt DATETIME,
 	CONSTRAINT FK_Payment_Order FOREIGN KEY (OrderId) REFERENCES [Order](Id)
 );
 
@@ -121,7 +168,10 @@ CREATE TABLE InventoryLog(
 	ChangeQuantity INT NOT NULL,
 	NewStockQuantity INT NOT NULL,
 	Reason NVARCHAR(MAX),
-	CreatedAt DATETIME,
+	CreatedBy BIGINT,
+	CreatedAt DATETIME DEFAULT GETDATE(),
+	LastUpdatedBy BIGINT,
+	LastUpdatedAt DATETIME,
 	CONSTRAINT FK_InventoryLog_ProductVariant FOREIGN KEY (ProductVariantId) REFERENCES ProductVariant(Id),
 	CONSTRAINT FK_InventoryLog_ChangeType FOREIGN KEY (ChangeTypeId) REFERENCES InventoryLogChangeType(Id)
 );
