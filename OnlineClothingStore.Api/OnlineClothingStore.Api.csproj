@@ -13,10 +13,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Database\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\OnlineClothingStore.Application\OnlineClothingStore.Application.csproj" />
     <ProjectReference Include="..\OnlineClothingStore.Domain\OnlineClothingStore.Domain.csproj" />
     <ProjectReference Include="..\OnlineClothingStore.Infrastructure\OnlineClothingStore.Infrastructure.csproj" />
