@@ -5,7 +5,7 @@ using OnlineClothingStore.Domain.Entities;
 
 namespace OnlineClothingStore.Infrastructure.Repositories
 {
-    public class ProductRepository :  IProductRepository
+    public class ProductRepository : IProductRepository
     {
         private readonly IDbConnectionFactory _connectionFactory;
 
@@ -14,7 +14,7 @@ namespace OnlineClothingStore.Infrastructure.Repositories
             _connectionFactory = connectionFactory;
         }
 
-        public async Task<Product?> GetByIdAsync(long id)
+        public async Task<Product?> GetByIdAsync(long id, CancellationToken cancellationToken = default)
         {
             using var connection = _connectionFactory.CreateConnection();
             string sql = @"
@@ -22,20 +22,24 @@ namespace OnlineClothingStore.Infrastructure.Repositories
                         CategoryId, BrandId
                  FROM Product
                  WHERE Id = @Id";
-            return await connection.QuerySingleOrDefaultAsync<Product>(sql, new { Id = id });
+
+            return await connection.QuerySingleOrDefaultAsync<Product>(
+                new CommandDefinition(sql, new { Id = id }, cancellationToken: cancellationToken));
         }
 
-        public async Task<IEnumerable<Product>> GetAllAsync()
+        public async Task<IEnumerable<Product>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             using var connection = _connectionFactory.CreateConnection();
             string sql = @"
                  SELECT Id, Name, Description, Price, SkuPrefix,
                         CategoryId, BrandId
                  FROM Product";
-            return await connection.QueryAsync<Product>(sql);
+
+            return await connection.QueryAsync<Product>(
+                new CommandDefinition(sql, cancellationToken: cancellationToken));
         }
 
-        public async Task<Product> AddAsync(Product product)
+        public async Task<Product> AddAsync(Product product, CancellationToken cancellationToken = default)
         {
             using var connection = _connectionFactory.CreateConnection();
             string sql = @"
@@ -49,13 +53,15 @@ namespace OnlineClothingStore.Infrastructure.Repositories
                 VALUES (@Name, @Description, @Price, @SkuPrefix, 
                         @CategoryId, @BrandId, 
                         @CreatedAt, @CreatedBy, @UpdatedAt, @UpdatedBy)";
-            return await connection.QuerySingleAsync<Product>(sql, product);
+
+            return await connection.QuerySingleAsync<Product>(
+                new CommandDefinition(sql, product, cancellationToken: cancellationToken));
         }
 
-        public async Task UpdateAsync(Product product)
+        public async Task UpdateAsync(Product product, CancellationToken cancellationToken = default)
         {
             using var connection = _connectionFactory.CreateConnection();
-            const string sql = @"
+            string sql = @"
                 UPDATE Product
                 SET Name = @Name,
                     Description = @Description,
@@ -66,14 +72,18 @@ namespace OnlineClothingStore.Infrastructure.Repositories
                     UpdatedAt = @UpdatedAt,
                     UpdatedBy = @UpdatedBy
                 WHERE Id = @Id";
-            await connection.ExecuteAsync(sql, product);
+
+            await connection.ExecuteAsync(
+                new CommandDefinition(sql, product, cancellationToken: cancellationToken));
         }
 
-        public async Task DeleteAsync(Product product)
+        public async Task DeleteAsync(Product product, CancellationToken cancellationToken = default)
         {
             using var connection = _connectionFactory.CreateConnection();
-            const string sql = "DELETE FROM Product WHERE Id = @Id";
-            await connection.ExecuteAsync(sql, product);
+            string sql = "DELETE FROM Product WHERE Id = @Id";
+
+            await connection.ExecuteAsync(
+                new CommandDefinition(sql, product, cancellationToken: cancellationToken));
         }
     }
 }

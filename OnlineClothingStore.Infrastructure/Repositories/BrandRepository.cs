@@ -14,52 +14,62 @@ namespace OnlineClothingStore.Infrastructure.Repositories
             _connectionFactory = connectionFactory;
         }
 
-        public async Task<Brand?> GetByIdAsync(long id)
+        public async Task<Brand?> GetByIdAsync(long id, CancellationToken cancellationToken = default)
         {
             using var connection = _connectionFactory.CreateConnection();
-            const string sql = @"
+            string sql = @"
                 SELECT Id, Name
                 FROM Brand
                 WHERE Id = @Id";
-            return await connection.QuerySingleOrDefaultAsync<Brand>(sql, new { Id = id });
+
+            return await connection.QuerySingleOrDefaultAsync<Brand>(
+                new CommandDefinition(sql, new { Id = id }, cancellationToken: cancellationToken));
         }
 
-        public async Task<IEnumerable<Brand>> GetAllAsync()
+        public async Task<IEnumerable<Brand>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             using var connection = _connectionFactory.CreateConnection();
-            const string sql = @"
+            string sql = @"
                 SELECT Id, Name
                 FROM Brand";
-            return await connection.QueryAsync<Brand>(sql);
+
+            return await connection.QueryAsync<Brand>(
+                new CommandDefinition(sql, cancellationToken: cancellationToken));
         }
 
-        public async Task<Brand> AddAsync(Brand brand)
+        public async Task<Brand> AddAsync(Brand brand, CancellationToken cancellationToken = default)
         {
             using var connection = _connectionFactory.CreateConnection();
-            const string sql = @"
+            string sql = @"
                 INSERT INTO Brand (Name, CreatedAt, CreatedBy, UpdatedAt, UpdatedBy)
                 OUTPUT INSERTED.Id, INSERTED.Name, INSERTED.CreatedAt, INSERTED.CreatedBy, INSERTED.UpdatedAt, INSERTED.UpdatedBy
                 VALUES (@Name, @CreatedAt, @CreatedBy, @UpdatedAt, @UpdatedBy)";
-            return await connection.QuerySingleAsync<Brand>(sql, brand);
+
+            return await connection.QuerySingleAsync<Brand>(
+                new CommandDefinition(sql, brand, cancellationToken: cancellationToken));
         }
 
-        public async Task UpdateAsync(Brand brand)
+        public async Task UpdateAsync(Brand brand, CancellationToken cancellationToken = default)
         {
             using var connection = _connectionFactory.CreateConnection();
-            const string sql = @"
+            string sql = @"
                 UPDATE Brand
                 SET Name = @Name,
                     UpdatedAt = @UpdatedAt,
                     UpdatedBy = @UpdatedBy
                 WHERE Id = @Id";
-            await connection.ExecuteAsync(sql, brand);
+
+            await connection.ExecuteAsync(
+                new CommandDefinition(sql, brand, cancellationToken: cancellationToken));
         }
 
-        public async Task DeleteAsync(Brand brand)
+        public async Task DeleteAsync(Brand brand, CancellationToken cancellationToken = default)
         {
             using var connection = _connectionFactory.CreateConnection();
-            const string sql = "DELETE FROM Brand WHERE Id = @Id";
-            await connection.ExecuteAsync(sql, brand);
+            string sql = "DELETE FROM Brand WHERE Id = @Id";
+
+            await connection.ExecuteAsync(
+                new CommandDefinition(sql, brand, cancellationToken: cancellationToken));
         }
     }
 }

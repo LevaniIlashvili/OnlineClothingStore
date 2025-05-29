@@ -14,42 +14,48 @@ namespace OnlineClothingStore.Infrastructure.Repositories
             _connectionFactory = connectionFactory;
         }
 
-        public async Task<ProductVariant?> GetByIdAsync(long id)
+        public async Task<ProductVariant?> GetByIdAsync(long id, CancellationToken cancellationToken = default)
         {
             using var connection = _connectionFactory.CreateConnection();
-            const string sql = @"
+            string sql = @"
                 SELECT Id, ProductId, Size, Color, Sku, StockQuantity, ImageUrl,
                        CreatedAt, CreatedBy, UpdatedAt, UpdatedBy
                 FROM ProductVariant
                 WHERE Id = @Id";
-            return await connection.QuerySingleOrDefaultAsync<ProductVariant>(sql, new { Id = id });
+
+            return await connection.QuerySingleOrDefaultAsync<ProductVariant>(
+                new CommandDefinition(sql, new { Id = id }, cancellationToken: cancellationToken));
         }
 
-        public async Task<IEnumerable<ProductVariant>> GetAllAsync()
+        public async Task<IEnumerable<ProductVariant>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             using var connection = _connectionFactory.CreateConnection();
-            const string sql = @"
+            string sql = @"
                 SELECT Id, ProductId, Size, Color, Sku, StockQuantity, ImageUrl,
                        CreatedAt, CreatedBy, UpdatedAt, UpdatedBy
                 FROM ProductVariant";
-            return await connection.QueryAsync<ProductVariant>(sql);
+
+            return await connection.QueryAsync<ProductVariant>(
+                new CommandDefinition(sql, cancellationToken: cancellationToken));
         }
 
-        public async Task<IEnumerable<ProductVariant>> GetByProductIdAsync(long productId)
+        public async Task<IEnumerable<ProductVariant>> GetByProductIdAsync(long productId, CancellationToken cancellationToken = default)
         {
             using var connection = _connectionFactory.CreateConnection();
-            const string sql = @"
+            string sql = @"
                 SELECT Id, ProductId, Size, Color, Sku, StockQuantity, ImageUrl,
                        CreatedAt, CreatedBy, UpdatedAt, UpdatedBy
                 FROM ProductVariant
                 WHERE ProductId = @ProductId";
-            return await connection.QueryAsync<ProductVariant>(sql, new { ProductId = productId });
+
+            return await connection.QueryAsync<ProductVariant>(
+                new CommandDefinition(sql, new { ProductId = productId }, cancellationToken: cancellationToken));
         }
 
-        public async Task<ProductVariant> AddAsync(ProductVariant variant)
+        public async Task<ProductVariant> AddAsync(ProductVariant variant, CancellationToken cancellationToken = default)
         {
             using var connection = _connectionFactory.CreateConnection();
-            const string sql = @"
+            string sql = @"
                 INSERT INTO ProductVariant (
                     ProductId, Size, Color, Sku, StockQuantity, ImageUrl,
                     CreatedAt, CreatedBy, UpdatedAt, UpdatedBy)
@@ -59,13 +65,15 @@ namespace OnlineClothingStore.Infrastructure.Repositories
                 VALUES (
                     @ProductId, @Size, @Color, @Sku, @StockQuantity, @ImageUrl,
                     @CreatedAt, @CreatedBy, @UpdatedAt, @UpdatedBy)";
-            return await connection.QuerySingleAsync<ProductVariant>(sql, variant);
+
+            return await connection.QuerySingleAsync<ProductVariant>(
+                new CommandDefinition(sql, variant, cancellationToken: cancellationToken));
         }
 
-        public async Task UpdateAsync(ProductVariant variant)
+        public async Task UpdateAsync(ProductVariant variant, CancellationToken cancellationToken = default)
         {
             using var connection = _connectionFactory.CreateConnection();
-            const string sql = @"
+            string sql = @"
                 UPDATE ProductVariant
                 SET ProductId = @ProductId,
                     Size = @Size,
@@ -76,14 +84,18 @@ namespace OnlineClothingStore.Infrastructure.Repositories
                     UpdatedAt = @UpdatedAt,
                     UpdatedBy = @UpdatedBy
                 WHERE Id = @Id";
-            await connection.ExecuteAsync(sql, variant);
+
+            await connection.ExecuteAsync(
+                new CommandDefinition(sql, variant, cancellationToken: cancellationToken));
         }
 
-        public async Task DeleteAsync(ProductVariant variant)
+        public async Task DeleteAsync(ProductVariant variant, CancellationToken cancellationToken = default)
         {
             using var connection = _connectionFactory.CreateConnection();
-            const string sql = "DELETE FROM ProductVariant WHERE Id = @Id";
-            await connection.ExecuteAsync(sql, variant);
+            string sql = "DELETE FROM ProductVariant WHERE Id = @Id";
+
+            await connection.ExecuteAsync(
+                new CommandDefinition(sql, variant, cancellationToken: cancellationToken));
         }
     }
 }
