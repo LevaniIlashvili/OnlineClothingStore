@@ -62,8 +62,8 @@ namespace OnlineClothingStore.Infrastructure.Repositories
             var sql = @"
                 UPDATE Cart
                 SET UserId = @UserId,
-                    LastModifiedAt = @LastModifiedAt,
-                    LastModifiedBy = @LastModifiedBy
+                    LastUpdatedAt = @LastUpdatedAt,
+                    LastUpdatedBy = @LastUpdatedBy
                 WHERE Id = @Id";
 
             await connection.ExecuteAsync(
