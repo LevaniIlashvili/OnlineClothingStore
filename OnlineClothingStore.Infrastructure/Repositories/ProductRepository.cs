@@ -27,16 +27,84 @@ namespace OnlineClothingStore.Infrastructure.Repositories
                 new CommandDefinition(sql, new { Id = id }, cancellationToken: cancellationToken));
         }
 
-        public async Task<IEnumerable<Product>> GetAllAsync(CancellationToken cancellationToken = default)
+        public async Task<(IEnumerable<Product>, int)> GetAllAsync(
+            int pageNumber = 1,
+            int pageSize = 20,
+            string sortBy = "CreatedAt",
+            string sortDirection = "ASC",
+            CancellationToken cancellationToken = default)
+        {
+            var validSortColumns = new HashSet<string> { "CreatedAt", "Name", "Price", };
+            if (!validSortColumns.Contains(sortBy))
+                sortBy = "CreatedAt";
+
+            sortDirection = sortDirection.ToUpper() == "DESC" ? "DESC" : "ASC";
+
+            using var connection = _connectionFactory.CreateConnection();
+
+            string countSql = "SELECT COUNT(*) FROM Product";
+
+            string dataSql = $@"
+                 SELECT Id, Name, Description, Price, SkuPrefix,
+                        CategoryId, BrandId 
+                 FROM Product
+                 ORDER BY {sortBy} {sortDirection}
+                 OFFSET @Offset ROWS
+                 FETCH NEXT @PageSize ROWS ONLY";
+
+
+            var parameters = new
+            {
+                Offset = (pageNumber - 1) * pageSize,
+                PageSize = pageSize
+            };
+
+            var count = await connection.ExecuteScalarAsync<int>(countSql);
+
+            var products = await connection.QueryAsync<Product>(
+                new CommandDefinition(dataSql,parameters, cancellationToken: cancellationToken));
+
+            return (products, count);
+        }
+
+        public async Task<Product?> GetByNameAsync(string name, CancellationToken cancellationToken = default)
         {
             using var connection = _connectionFactory.CreateConnection();
             string sql = @"
                  SELECT Id, Name, Description, Price, SkuPrefix,
                         CategoryId, BrandId
-                 FROM Product";
+                 FROM Product
+                 WHERE Name = @Name";
 
-            return await connection.QueryAsync<Product>(
-                new CommandDefinition(sql, cancellationToken: cancellationToken));
+            return await connection.QuerySingleOrDefaultAsync<Product>(
+                new CommandDefinition(sql, new { Name = name }, cancellationToken: cancellationToken));
+        }
+
+        public async Task<Product?> GetBySkuPrefixAsync(string skuPrefix, CancellationToken cancellationToken = default)
+        {
+            using var connection = _connectionFactory.CreateConnection();
+            string sql = @"
+                 SELECT Id, SkuPrefix, Description, Price, SkuPrefix,
+                        CategoryId, BrandId
+                 FROM Product
+                 WHERE SkuPrefix = @SkuPrefix";
+
+            return await connection.QuerySingleOrDefaultAsync<Product>(
+                new CommandDefinition(sql, new { SkuPrefix = skuPrefix }, cancellationToken: cancellationToken));
+        }
+
+        public async Task<bool> ProductExistsAsync(string name, string skuPrefix, CancellationToken cancellationToken = default)
+        {
+            using var connection = _connectionFactory.CreateConnection();
+            string sql = @"
+                 SELECT 1
+                 FROM Product
+                 WHERE Name = @Name OR SkuPrefix = @SkuPrefix";
+
+            var result = await connection.QuerySingleOrDefaultAsync<int?>(
+                new CommandDefinition(sql, new { Name = name, SkuPrefix = skuPrefix }, cancellationToken: cancellationToken));
+
+            return result.HasValue;
         }
 
         public async Task<Product> AddAsync(Product product, CancellationToken cancellationToken = default)
@@ -45,14 +113,13 @@ namespace OnlineClothingStore.Infrastructure.Repositories
             string sql = @"
                 INSERT INTO Product (Name, Description, Price, SkuPrefix, 
                                      CategoryId, BrandId, 
-                                     CreatedAt, CreatedBy, UpdatedAt, UpdatedBy)
+                                     CreatedAt, CreatedBy)
                 OUTPUT INSERTED.Id, INSERTED.Name, INSERTED.Description, 
                        INSERTED.Price, INSERTED.SkuPrefix,
-                       INSERTED.CategoryId, INSERTED.BrandId,
-                       INSERTED.CreatedAt, INSERTED.CreatedBy, INSERTED.UpdatedAt, INSERTED.UpdatedBy
+                       INSERTED.CategoryId, INSERTED.BrandId
                 VALUES (@Name, @Description, @Price, @SkuPrefix, 
                         @CategoryId, @BrandId, 
-                        @CreatedAt, @CreatedBy, @UpdatedAt, @UpdatedBy)";
+                        @CreatedAt, @CreatedBy)";
 
             return await connection.QuerySingleAsync<Product>(
                 new CommandDefinition(sql, product, cancellationToken: cancellationToken));
@@ -69,8 +136,8 @@ namespace OnlineClothingStore.Infrastructure.Repositories
                     SkuPrefix = @SkuPrefix,
                     CategoryId = @CategoryId,
                     BrandId = @BrandId,
-                    UpdatedAt = @UpdatedAt,
-                    UpdatedBy = @UpdatedBy
+                    LastUpdatedAt = @LastUpdatedAt,
+                    LastUpdatedBy = @LastUpdatedBy
                 WHERE Id = @Id";
 
             await connection.ExecuteAsync(
