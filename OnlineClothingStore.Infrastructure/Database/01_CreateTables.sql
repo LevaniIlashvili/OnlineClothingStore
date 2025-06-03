@@ -1,4 +1,4 @@
-USE OnlineClothingStore;
+	USE OnlineClothingStore;
 GO
 
 CREATE TABLE UserRole(
@@ -91,7 +91,7 @@ CREATE TABLE ProductVariant(
 	CreatedAt DATETIME DEFAULT GETDATE(),
 	LastUpdatedBy BIGINT,
 	LastUpdatedAt DATETIME,
-	CONSTRAINT FK_ProductVariant_Product FOREIGN KEY (ProductId) REFERENCES [Product](Id)
+	CONSTRAINT FK_ProductVariant_Product FOREIGN KEY (ProductId) REFERENCES [Product](Id) ON DELETE CASCADE
 );
 
 CREATE TABLE Cart(
