@@ -37,13 +37,24 @@ namespace OnlineClothingStore.Infrastructure.Repositories
                 new CommandDefinition(sql, cancellationToken: cancellationToken));
         }
 
-        public async Task<Brand> AddAsync(Brand brand, CancellationToken cancellationToken = default)
+        public async Task<Brand?> GetByNameAsync(string name, CancellationToken cancellationToken = default)
         {
             using var connection = _connectionFactory.CreateConnection();
-            string sql = @"
-                INSERT INTO Brand (Name, CreatedAt, CreatedBy, UpdatedAt, UpdatedBy)
-                OUTPUT INSERTED.Id, INSERTED.Name, INSERTED.CreatedAt, INSERTED.CreatedBy, INSERTED.UpdatedAt, INSERTED.UpdatedBy
-                VALUES (@Name, @CreatedAt, @CreatedBy, @UpdatedAt, @UpdatedBy)";
+            string sql = @"SELECT Id, Name
+                           FROM Brand
+                           WHERE Name = @Name";
+
+            return await connection.QuerySingleOrDefaultAsync<Brand>(
+                new CommandDefinition(sql, new { Name = name },cancellationToken: cancellationToken));
+        }
+
+        public async Task<Brand> AddAsync(Brand brand, CancellationToken cancellationToken = default
+        )
+        {
+            using var connection = _connectionFactory.CreateConnection();
+            string sql = @"INSERT INTO Brand (Name, CreatedAt, CreatedBy)
+                           OUTPUT INSERTED.Id, INSERTED.Name
+                           VALUES (@Name, @CreatedAt, @CreatedBy)";
 
             return await connection.QuerySingleAsync<Brand>(
                 new CommandDefinition(sql, brand, cancellationToken: cancellationToken));
@@ -55,8 +66,8 @@ namespace OnlineClothingStore.Infrastructure.Repositories
             string sql = @"
                 UPDATE Brand
                 SET Name = @Name,
-                    UpdatedAt = @UpdatedAt,
-                    UpdatedBy = @UpdatedBy
+                    LastUpdatedAt = @LastUpdatedAt,
+                    LastUpdatedBy = @LastUpdatedBy
                 WHERE Id = @Id";
 
             await connection.ExecuteAsync(
