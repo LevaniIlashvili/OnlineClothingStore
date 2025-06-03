@@ -1,6 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using OnlineClothingStore.DTOs;
-using OnlineClothingStore.Models;
+﻿using MediatR;
+using Microsoft.AspNetCore.Mvc;
+using OnlineClothingStore.Application.Contracts.Infrastructure;
+using OnlineClothingStore.Application.DTOs;
+using OnlineClothingStore.Application.Features.Categories.Commands.CreateCategory;
+using OnlineClothingStore.Application.Features.Categories.Commands.DeleteCategory;
+using OnlineClothingStore.Application.Features.Categories.Commands.UpdateCategory;
+using OnlineClothingStore.Application.Features.Categories.Queries.GetCategories;
+using OnlineClothingStore.Application.Features.Categories.Queries.GetCategory;
 
 namespace OnlineClothingStore.Controllers
 {
@@ -8,22 +14,26 @@ namespace OnlineClothingStore.Controllers
     [ApiController]
     public class CategoryController : ControllerBase
     {
-        public static List<Category> Categories = new List<Category>
+        private readonly IMediator _mediator;
+        private readonly ICategoryRepository _categoryRepository;
+
+        public CategoryController(IMediator mediator, ICategoryRepository categoryRepository)
         {
-            new Category { Id = 1, Name = "T-Shirts" },
-            new Category { Id = 2, Name = "Jeans" },
-            new Category { Id = 3, Name = "Hoodies & Sweatshirts" }
-        };
+            _mediator = mediator;
+            _categoryRepository = categoryRepository;
+        }
 
         /// <summary>
         /// Gets all categories
         /// </summary>
         /// <response code="200">Categories retrieved successfully</response>
         [HttpGet]
-        [ProducesResponseType(typeof(List<Category>), StatusCodes.Status200OK)]
-        public ActionResult<List<Category>> GetCategories()
+        [ProducesResponseType(typeof(List<CategoryDTO>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<List<CategoryDTO>>> GetCategories()
         {
-            return Ok(Categories);
+            var query = new GetCategoriesQuery();
+            var categories = await _mediator.Send(query);
+            return Ok(categories);
         }
 
         /// <summary>
@@ -33,14 +43,12 @@ namespace OnlineClothingStore.Controllers
         /// <response code="200">Category retrieved successfully</response>
         /// <response code="404">Category not found</response>
         [HttpGet("{id}")]
-        [ProducesResponseType(typeof(Category), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(CategoryDTO), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult<Category> GetCategory([FromRoute] int id)
+        public async Task<ActionResult<CategoryDTO>> GetCategory([FromRoute] long id)
         {
-            var category = Categories.FirstOrDefault(c => c.Id == id);
-
-            if (category is null)
-                return NotFound();
+            var query = new GetCategoryQuery() { Id = id };
+            var category = await _mediator.Send(query);
 
             return Ok(category);
         }
@@ -48,41 +56,41 @@ namespace OnlineClothingStore.Controllers
         /// <summary>
         /// Adds a new category
         /// </summary>
-        /// <param name="categoryDTO">The category data to add</param>
+        /// <param name="request">The category data to add</param>
         /// <response code="201">Category created successfully</response>
+        /// <response code="409">Category with same name already exists</response>
+        /// <response code="404">Parent category not found</response>
+        /// <response code="400">Validation failure</response>
         [HttpPost]
-        [ProducesResponseType(typeof(Category), StatusCodes.Status201Created)]
-        public ActionResult<Category> AddCategory([FromBody] AddCategoryDTO categoryDTO)
+        [ProducesResponseType(typeof(CategoryDTO), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<CategoryDTO>> AddCategory([FromBody] CreateCategoryCommand request)
         {
-            var category = new Category
-            {
-                Id = Categories.Max(c => c.Id) + 1,
-                Name = categoryDTO.Name
-            };
+            var category = await _mediator.Send(request);
 
-            Categories.Add(category);
-
-            return CreatedAtAction(nameof(GetCategory), new { id = category.Id }, category);
+            return CreatedAtAction(nameof(GetCategory), new { category.Id }, category);
         }
 
         /// <summary>
         /// Updates an existing category
         /// </summary>
         /// <param name="id">The id of category to update</param>
-        /// <param name="updatedCategory">The updated category data</param>
+        /// <param name="request">The updated category data</param>
         /// <response code="204">Category updated successfully</response>
-        /// <response code="404">Category not found</response>
+        /// <response code="404">Category or parent category not found</response>
+        /// <response code="409">Category with different id and this name already exists</response>
+        /// <response code="400">Validation failure</response>
         [HttpPut("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult UpdateCategory([FromRoute] int id, [FromBody] AddCategoryDTO updatedCategory)
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult> UpdateCategory([FromRoute] long id, [FromBody] UpdateCategoryCommand request)
         {
-            var category = Categories.FirstOrDefault(c => c.Id == id);
-
-            if (category is null)
-                return NotFound();
-
-            category.Name = updatedCategory.Name;
+            request.Id = id;
+            await _mediator.Send(request);
 
             return NoContent();
         }
@@ -93,17 +101,16 @@ namespace OnlineClothingStore.Controllers
         /// <param name="id">The id of category to delete</param>
         /// <response code="204">Category deleted successfully</response>
         /// <response code="404">Category not found</response>
+        /// <response code="409">Cannot delete category has subcategories</response>
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult DeleteCategory([FromRoute] int id)
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        public async Task<ActionResult> DeleteCategory([FromRoute] long id)
         {
-            var category = Categories.FirstOrDefault(c => c.Id == id);
+            var request = new DeleteCategoryCommand() { Id = id };
 
-            if (category is null)
-                return NotFound();
-
-            Categories.Remove(category);
+            await _mediator.Send(request);
 
             return NoContent();
         }
