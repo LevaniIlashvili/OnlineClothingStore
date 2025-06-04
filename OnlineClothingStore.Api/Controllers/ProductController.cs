@@ -2,10 +2,14 @@
 using Microsoft.AspNetCore.Mvc;
 using OnlineClothingStore.Application.DTOs;
 using OnlineClothingStore.Application.Features.Products.Commands.CreateProduct;
+using OnlineClothingStore.Application.Features.Products.Commands.CreateProductVariant;
 using OnlineClothingStore.Application.Features.Products.Commands.DeleteProduct;
+using OnlineClothingStore.Application.Features.Products.Commands.DeleteProductVariant;
 using OnlineClothingStore.Application.Features.Products.Commands.UpdateProduct;
+using OnlineClothingStore.Application.Features.Products.Commands.UpdateProductVariant;
 using OnlineClothingStore.Application.Features.Products.Queries.GetProduct;
 using OnlineClothingStore.Application.Features.Products.Queries.GetProducts;
+using OnlineClothingStore.Application.Features.Products.Queries.GetProductVariants;
 
 namespace OnlineClothingStore.Controllers
 {
@@ -114,105 +118,85 @@ namespace OnlineClothingStore.Controllers
             return NoContent();
         }
 
-        ///// <summary>
-        ///// Gets all variants for a specific product
-        ///// </summary>
-        ///// <param name="productId">The id of the product</param>
-        ///// <response code="200">Returns list of product variants</response>
-        ///// <response code="404">Product not found</response>
-        //[HttpGet("{productId}/variants")]
-        //[ProducesResponseType(typeof(List<ProductVariant>), StatusCodes.Status200OK)]
-        //[ProducesResponseType(StatusCodes.Status404NotFound)]
-        //public ActionResult<List<ProductVariant>> GetProductVariants([FromRoute] int productId)
-        //{
-        //    var product = Products.FirstOrDefault(p => p.Id == productId);
-        //    if (product is null)
-        //        return NotFound();
+        /// <summary>
+        /// Gets all variants for a specific product
+        /// </summary>
+        /// <param name="productId">The id of the product</param>
+        /// <response code="200">Returns list of product variants</response>
+        /// <response code="404">Product not found</response>
+        [HttpGet("{productId}/variants")]
+        [ProducesResponseType(typeof(List<ProductVariantDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<List<ProductVariantDTO>>> GetProductVariants([FromRoute] int productId)
+        {
+            var query = new GetProductVariantsQuery() { ProductId = productId };
 
-        //    var variants = ProductVariants.Where(pv => pv.ProductId == productId).ToList();
-        //    return Ok(variants);
-        //}
+            var productVariants = await _mediator.Send(query);
 
-        ///// <summary>
-        ///// Adds a new variant for a specific product
-        ///// </summary>
-        ///// <param name="productId">The id of the product</param>
-        ///// <param name="addProductVariantDTO">The data of the variant to add</param>
-        ///// <response code="201">Product variant was created successfully</response>
-        ///// <response code="404">Product not found</response>
-        //[HttpPost("{productId}/variants")]
-        //[ProducesResponseType(typeof(ProductVariant), StatusCodes.Status201Created)]
-        //[ProducesResponseType(StatusCodes.Status404NotFound)]
-        //public ActionResult<ProductVariant> AddProductVariant([FromRoute] int productId, [FromBody] AddProductVariantDTO addProductVariantDTO)
-        //{
-        //    var product = Products.FirstOrDefault(p => p.Id == productId);
+            return Ok(productVariants);
+        }
 
-        //    if (product is null)
-        //        return NotFound();
+        /// <summary>
+        /// Adds a new variant for a specific product
+        /// </summary>
+        /// <param name="productId">The id of the product</param>
+        /// <param name="request">The data of the variant to add</param>
+        /// <response code="201">Product variant was created successfully</response>
+        /// <response code="404">Product not found</response>
+        /// <response code="409">Product variant with same sku already exists</response>
+        /// <response code="400">Validation failure</response>
+        [HttpPost("{productId}/variants")]
+        [ProducesResponseType(typeof(ProductVariantDTO), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<ProductVariantDTO>> AddProductVariant([FromRoute] int productId, [FromBody] CreateProductVariantCommand request)
+        {
+            request.ProductId = productId;
+            var productVariant = await _mediator.Send(request);
 
-        //    var productVariant = new ProductVariant()
-        //    {
-        //        Id = ProductVariants.Max(pv => pv.Id) + 1,
-        //        ProductId = productId,
-        //        Size = addProductVariantDTO.Size,
-        //        Color = addProductVariantDTO.Color,
-        //        Stock = addProductVariantDTO.Stock
-        //    };
-        //    ProductVariants.Add(productVariant);
+            return CreatedAtAction(nameof(GetProduct), new { id = productId }, productVariant);
+        }
 
-        //    return CreatedAtAction(nameof(GetProduct), new { id = productId }, productVariant);
-        //}
+        /// <summary>
+        /// Updates a variant for a specific product
+        /// </summary>
+        /// <param name="variantId">The id of the variant</param>
+        /// <param name="request">The updated variant data</param>
+        /// <response code="204">Product variant was updated successfully</response>
+        /// <response code="404">Product variant not found</response>
+        /// <response code="409">Product variant with same sku already exists</response>
+        /// <response code="400">Validation failure</response>
+        [HttpPut("variants/{variantId}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task <ActionResult> UpdateProductVariant([FromRoute] int variantId, [FromBody] UpdateProductVariantCommand request)
+        {
+            request.Id = variantId;
 
-        ///// <summary>
-        ///// Updates a variant for a specific product
-        ///// </summary>
-        ///// <param name="productId">The id of the product</param>
-        ///// <param name="variantId">The id of the variant</param>
-        ///// <param name="updateDto">The updated variant data</param>
-        ///// <response code="204">Product variant was updated successfully</response>
-        ///// <response code="404">Product variant not found</response>
-        //[HttpPut("{productId}/variants/{variantId}")]
-        //[ProducesResponseType(StatusCodes.Status204NoContent)]
-        //[ProducesResponseType(StatusCodes.Status404NotFound)]
-        //public ActionResult UpdateProductVariant(
-        //    [FromRoute] int productId,
-        //    [FromRoute] int variantId,
-        //    [FromBody] UpdateProductVariantDTO updateDto)
-        //{
-        //    var variant = ProductVariants
-        //        .FirstOrDefault(pv => pv.Id == variantId && pv.ProductId == productId);
+            await _mediator.Send(request);
 
-        //    if (variant is null)
-        //        return NotFound();
+            return NoContent();
+        }
 
-        //    variant.Size = updateDto.Size;
-        //    variant.Color = updateDto.Color;
-        //    variant.Stock = updateDto.Stock;
+        /// <summary>
+        /// Deletes a product variant
+        /// </summary>
+        /// <param name="variantId">The id of the variant</param>
+        /// <response code="204">Product variant was deleted successfully</response>
+        /// <response code="404">Product variant not found</response>
+        [HttpDelete("variants/{variantId}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult> DeleteProductVariant([FromRoute] int variantId)
+        {
+            var command = new DeleteProductVariantCommand() { Id = variantId };
 
-        //    return NoContent();
-        //}
+            await _mediator.Send(command);
 
-        ///// <summary>
-        ///// Deletes a variant of a specific product
-        ///// </summary>
-        ///// <param name="productId">The id of the product</param>
-        ///// <param name="variantId">The id of the variant</param>
-        ///// <response code="204">Product variant was deleted successfully</response>
-        ///// <response code="404">Product variant not found</response>
-        //[HttpDelete("{productId}/variants/{variantId}")]
-        //[ProducesResponseType(StatusCodes.Status204NoContent)]
-        //[ProducesResponseType(StatusCodes.Status404NotFound)]
-        //public ActionResult DeleteProductVariant([FromRoute] int productId, [FromRoute] int variantId)
-        //{
-        //    var variant = ProductVariants
-        //        .FirstOrDefault(pv => pv.Id == variantId && pv.ProductId == productId);
-
-        //    if (variant is null)
-        //        return NotFound();
-
-        //    ProductVariants.Remove(variant);
-
-        //    return NoContent();
-        //}
+            return NoContent();
+        }
     }
 }
