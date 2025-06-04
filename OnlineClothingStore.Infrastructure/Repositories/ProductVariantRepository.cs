@@ -89,8 +89,8 @@ namespace OnlineClothingStore.Infrastructure.Repositories
                     Sku = @Sku,
                     StockQuantity = @StockQuantity,
                     ImageUrl = @ImageUrl,
-                    UpdatedAt = @UpdatedAt,
-                    UpdatedBy = @UpdatedBy
+                    LastUpdatedAt = @LastUpdatedAt,
+                    LastUpdatedBy = @LastUpdatedBy
                 WHERE Id = @Id";
 
             await connection.ExecuteAsync(
