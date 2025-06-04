@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using OnlineClothingStore.DTOs;
-using OnlineClothingStore.Models;
+﻿using MediatR;
+using Microsoft.AspNetCore.Mvc;
+using OnlineClothingStore.Application.Features.Users.Commands;
 
 namespace OnlineClothingStore.Controllers
 {
@@ -8,44 +8,29 @@ namespace OnlineClothingStore.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
-        public static List<User> Users = new List<User> 
+        private readonly IMediator _mediator;
+
+        public UserController(IMediator mediator)
         {
-            new User { Id = 1, FirstName = "Alice", LastName = "Smith", Email = "alice@example.com", PasswordHash = "hashed_pw_1", Role = "Customer" },
-            new User { Id = 2, FirstName = "Bob", LastName = "Johnson", Email = "bob@example.com", PasswordHash = "hashed_pw_2", Role = "Admin" },
-            new User { Id = 3, FirstName = "Charlie", LastName = "Lee", Email = "charlie@example.com", PasswordHash = "hashed_pw_3", Role = "Customer" },
-        };
+            _mediator = mediator;
+        }
 
         /// <summary>
         /// Creates a new user
         /// </summary>
-        /// <param name="userDTO">The data of user being created</param>
+        /// <param name="request">The data of user being created</param>
         /// <response code="200">User created successfully</response>
+        /// <response code="409">User with this email already exists</response>
+        /// <response code="400">Validation failure</response>
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public ActionResult RegisterUser(AddUserDTO userDTO)
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        public async Task<ActionResult<long>> RegisterUser(CreateUserCommand request)
         {
-            var user = new User
-            {
-                Id = Users.Max(u => u.Id) + 1,
-                FirstName = userDTO.FirstName,
-                LastName = userDTO.LastName,
-                Email = userDTO.Email,
-                PasswordHash = userDTO.Password,
-                Role = "Customer"
-            };
+            var userId = await _mediator.Send(request);
 
-            Users.Add(user);
-
-            var cart = new Cart
-            {
-                Id = CartController.Carts.Max(c => c.Id) + 1,
-                UserId = user.Id,
-                Items = new List<CartItem>()
-            };
-
-            CartController.Carts.Add(cart);
-
-            return Ok();
+            return Ok(userId);
         }
     }
 }
