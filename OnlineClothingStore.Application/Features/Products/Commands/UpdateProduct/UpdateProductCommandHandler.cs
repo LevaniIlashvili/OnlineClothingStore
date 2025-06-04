@@ -25,14 +25,6 @@ namespace OnlineClothingStore.Application.Features.Products.Commands.UpdateProdu
 
         public async Task Handle(UpdateProductCommand request, CancellationToken cancellationToken)
         {
-            var validator = new UpdateProductCommandValidator();
-            var validationResult = await validator.ValidateAsync(request);
-
-            if (validationResult.Errors.Count > 0)
-            {
-                throw new FluentValidation.ValidationException("aaaaaaaa");
-            }
-
             var existingProduct = await _productRepository.GetByIdAsync(request.Id, cancellationToken);
 
             if (existingProduct is null)
