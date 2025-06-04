@@ -3,6 +3,7 @@ using OnlineClothingStore.Application.DTOs;
 using OnlineClothingStore.Application.Features.Brands.Commands.CreateBrand;
 using OnlineClothingStore.Application.Features.Categories.Commands.CreateCategory;
 using OnlineClothingStore.Application.Features.Products.Commands.CreateProduct;
+using OnlineClothingStore.Application.Features.Products.Commands.CreateProductVariant;
 using OnlineClothingStore.Application.Features.Products.Commands.UpdateProduct;
 using OnlineClothingStore.Domain.Entities;
 
@@ -21,6 +22,9 @@ namespace OnlineClothingStore.Application.Profiles
             CreateMap<Product, ProductDTO>().ReverseMap();
             CreateMap<Product, CreateProductCommand>().ReverseMap();
             CreateMap<Product, UpdateProductCommand>().ReverseMap();
+
+            CreateMap<ProductVariant, ProductVariantDTO>().ReverseMap();
+            CreateMap<ProductVariant, CreateProductVariantCommand>().ReverseMap();
         }
     }
 }
