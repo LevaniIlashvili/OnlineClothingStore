@@ -55,12 +55,12 @@ namespace OnlineClothingStore.Infrastructure.Repositories
             var sql = @"
                 INSERT INTO [User] (
                     FirstName, LastName, Email, PasswordHash, PhoneNumber, RoleId,
-                    CreatedAt, CreatedBy, UpdatedAt, UpdatedBy)
+                    CreatedAt, CreatedBy)
                 OUTPUT INSERTED.Id, INSERTED.FirstName, INSERTED.LastName, INSERTED.Email,
                        INSERTED.PasswordHash, INSERTED.PhoneNumber, INSERTED.RoleId
                 VALUES (
                     @FirstName, @LastName, @Email, @PasswordHash, @PhoneNumber, @RoleId,
-                    @CreatedAt, @CreatedBy, @UpdatedAt, @UpdatedBy)";
+                    @CreatedAt, @CreatedBy)";
 
             return await connection.QuerySingleAsync<User>(
                 new CommandDefinition(sql, user, cancellationToken: cancellationToken));
