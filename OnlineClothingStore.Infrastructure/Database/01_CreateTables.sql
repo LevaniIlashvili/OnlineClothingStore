@@ -143,7 +143,7 @@ CREATE TABLE OrderItem(
 	CreatedAt DATETIME DEFAULT GETDATE(),
 	LastUpdatedBy BIGINT,
 	LastUpdatedAt DATETIME,
-	CONSTRAINT FK_OrderItem_Order FOREIGN KEY (OrderId) REFERENCES [Order](Id),
+	CONSTRAINT FK_OrderItem_Order FOREIGN KEY (OrderId) REFERENCES [Order](Id) ON DELETE CASCADE,
 	CONSTRAINT FK_OrderItem_ProductVariant FOREIGN KEY (ProductVariantId) REFERENCES ProductVariant(Id)
 );
 
