@@ -12,7 +12,6 @@ namespace OnlineClothingStore.Domain.Entities
         public string ShippingAddress { get; set; } = null!;
 
         public User User { get; set; } = null!;
-        public OrderStatus OrderStatus { get; set; } = null!;
         public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();
         public Payment? Payment { get; set; }
     }
