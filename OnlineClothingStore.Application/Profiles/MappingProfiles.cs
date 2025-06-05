@@ -5,6 +5,8 @@ using OnlineClothingStore.Application.Features.Categories.Commands.CreateCategor
 using OnlineClothingStore.Application.Features.Products.Commands.CreateProduct;
 using OnlineClothingStore.Application.Features.Products.Commands.CreateProductVariant;
 using OnlineClothingStore.Application.Features.Products.Commands.UpdateProduct;
+using OnlineClothingStore.Application.Features.Products.Commands.UpdateProductVariant;
+using OnlineClothingStore.Application.Features.Users.Commands;
 using OnlineClothingStore.Domain.Entities;
 
 namespace OnlineClothingStore.Application.Profiles
@@ -25,6 +27,16 @@ namespace OnlineClothingStore.Application.Profiles
 
             CreateMap<ProductVariant, ProductVariantDTO>().ReverseMap();
             CreateMap<ProductVariant, CreateProductVariantCommand>().ReverseMap();
+            CreateMap<ProductVariant, UpdateProductVariantCommand>().ReverseMap();
+
+            CreateMap<User, CreateUserCommand>().ReverseMap();
+
+            CreateMap<CartItemDTO, CartItem>().ReverseMap();
+
+            CreateMap<OrderDTO, Order>().ReverseMap();
+            CreateMap<OrderItem, OrderItemDTO>().ReverseMap();
+
+            CreateMap<InventoryLog, InventoryLogDTO>().ReverseMap();
         }
     }
 }
