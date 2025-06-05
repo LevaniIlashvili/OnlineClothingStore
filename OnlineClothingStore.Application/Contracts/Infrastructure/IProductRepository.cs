@@ -5,6 +5,7 @@ namespace OnlineClothingStore.Application.Contracts.Infrastructure
     public interface IProductRepository
     {
         Task<Product?> GetByIdAsync(long id, CancellationToken cancellationToken = default);
+        Task<IEnumerable<Product>> GetByIdsAsync(IEnumerable<long> ids, CancellationToken cancellationToken = default);
         Task<(IEnumerable<Product> products, int count)> GetAllAsync(
             int pageNumber = 1,
             int pageSize = 20,

@@ -27,6 +27,21 @@ namespace OnlineClothingStore.Infrastructure.Repositories
                 new CommandDefinition(sql, new { Id = id }, cancellationToken: cancellationToken));
         }
 
+        public async Task<IEnumerable<Product>> GetByIdsAsync(IEnumerable<long> ids, CancellationToken cancellationToken = default)
+        {
+            using var connection = _connectionFactory.CreateConnection();
+
+            string sql = @"
+                SELECT Id, Name, Description, Price, SkuPrefix,
+                       CategoryId, BrandId
+                FROM Product
+                WHERE Id IN @Ids";
+
+            return await connection.QueryAsync<Product>(
+                new CommandDefinition(sql, new { Ids = ids }, cancellationToken: cancellationToken));
+        }
+
+
         public async Task<(IEnumerable<Product>, int)> GetAllAsync(
             int pageNumber = 1,
             int pageSize = 20,
