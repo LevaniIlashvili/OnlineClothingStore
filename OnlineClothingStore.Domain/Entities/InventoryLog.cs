@@ -12,6 +12,5 @@ namespace OnlineClothingStore.Domain.Entities
         public string? Reason { get; set; }
 
         public ProductVariant ProductVariant { get; set; } = null!;
-        public InventoryLogChangeType ChangeType { get; set; } = null!;
     }
 }
