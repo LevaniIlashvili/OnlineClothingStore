@@ -40,9 +40,9 @@ namespace OnlineClothingStore.Infrastructure.Repositories
         {
             using var connection = _connectionFactory.CreateConnection();
             string sql = @"
-                INSERT INTO CartItem (CartId, ProductVariantId, Quantity, CreatedAt, CreatedBy, UpdatedAt, UpdatedBy)
+                INSERT INTO CartItem (CartId, ProductVariantId, Quantity, CreatedAt, CreatedBy)
                 OUTPUT INSERTED.Id, INSERTED.CartId, INSERTED.ProductVariantId, INSERTED.Quantity
-                VALUES (@CartId, @ProductVariantId, @Quantity, @CreatedAt, @CreatedBy, @UpdatedAt, @UpdatedBy)";
+                VALUES (@CartId, @ProductVariantId, @Quantity, @CreatedAt, @CreatedBy)";
 
             return await connection.QuerySingleAsync<CartItem>(new CommandDefinition(sql, cartItem, cancellationToken: cancellationToken));
         }
@@ -54,11 +54,19 @@ namespace OnlineClothingStore.Infrastructure.Repositories
                 UPDATE CartItem
                 SET ProductVariantId = @ProductVariantId,
                     Quantity = @Quantity,
-                    UpdatedAt = @UpdatedAt,
-                    UpdatedBy = @UpdatedBy
+                    LastUpdatedAt = @LastUpdatedAt,
+                    LastUpdatedBy = @LastUpdatedBy
                 WHERE Id = @Id";
 
             await connection.ExecuteAsync(new CommandDefinition(sql, cartItem, cancellationToken: cancellationToken));
+        }
+
+        public async Task DeleteByCartIdAsync(long cartId, CancellationToken cancellationToken = default)
+        {
+            using var connection = _connectionFactory.CreateConnection();
+            string sql = "DELETE FROM CartItem WHERE CartId = @CartId";
+
+            await connection.ExecuteAsync(new CommandDefinition(sql, new { CartId = cartId }, cancellationToken: cancellationToken));
         }
 
         public async Task DeleteAsync(CartItem cartItem, CancellationToken cancellationToken = default)

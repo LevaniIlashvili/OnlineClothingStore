@@ -58,12 +58,12 @@ namespace OnlineClothingStore.Infrastructure.Repositories
             string sql = @"
                 INSERT INTO InventoryLog (
                     ProductVariantId, ChangeTypeId, ChangeQuantity, NewStockQuantity, Reason,
-                    CreatedAt, CreatedBy, UpdatedAt, UpdatedBy)
+                    CreatedAt, CreatedBy)
                 OUTPUT INSERTED.Id, INSERTED.ProductVariantId, INSERTED.ChangeTypeId, INSERTED.ChangeQuantity,
                        INSERTED.NewStockQuantity, INSERTED.Reason, INSERTED.CreatedAt, INSERTED.CreatedBy
                 VALUES (
                     @ProductVariantId, @ChangeTypeId, @ChangeQuantity, @NewStockQuantity, @Reason,
-                    @CreatedAt, @CreatedBy, @UpdatedAt, @UpdatedBy)";
+                    @CreatedAt, @CreatedBy)";
 
             return await connection.QuerySingleAsync<InventoryLog>(
                 new CommandDefinition(sql, inventoryLog, cancellationToken: cancellationToken));
@@ -79,8 +79,8 @@ namespace OnlineClothingStore.Infrastructure.Repositories
                     ChangeQuantity = @ChangeQuantity,
                     NewStockQuantity = @NewStockQuantity,
                     Reason = @Reason,
-                    UpdatedAt = @UpdatedAt,
-                    UpdatedBy = @UpdatedBy
+                    LastUpdatedAt = @LastUpdatedAt,
+                    LastUpdatedBy = @LastUpdatedBy
                 WHERE Id = @Id";
 
             await connection.ExecuteAsync(

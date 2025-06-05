@@ -1,6 +1,15 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using OnlineClothingStore.DTOs;
-using OnlineClothingStore.Models;
+﻿using MediatR;
+using Microsoft.AspNetCore.Mvc;
+using OnlineClothingStore.Application.DTOs;
+using OnlineClothingStore.Application.Features.Products.Commands.CreateProduct;
+using OnlineClothingStore.Application.Features.Products.Commands.CreateProductVariant;
+using OnlineClothingStore.Application.Features.Products.Commands.DeleteProduct;
+using OnlineClothingStore.Application.Features.Products.Commands.DeleteProductVariant;
+using OnlineClothingStore.Application.Features.Products.Commands.UpdateProduct;
+using OnlineClothingStore.Application.Features.Products.Commands.UpdateProductVariant;
+using OnlineClothingStore.Application.Features.Products.Queries.GetProduct;
+using OnlineClothingStore.Application.Features.Products.Queries.GetProducts;
+using OnlineClothingStore.Application.Features.Products.Queries.GetProductVariants;
 
 namespace OnlineClothingStore.Controllers
 {
@@ -8,76 +17,26 @@ namespace OnlineClothingStore.Controllers
     [ApiController]
     public class ProductController : ControllerBase
     {
-        public static List<Product> Products = new List<Product>
+        private readonly IMediator _mediator;
+
+        public ProductController(IMediator mediator)
         {
-            new Product
-            {
-                Id = 1,
-                Name = "Classic T-Shirt",
-                Description = "100% cotton, breathable fabric.",
-                CategoryId = 1,
-                Price = 19.99m
-            },
-            new Product
-            {
-                Id = 2,
-                Name = "Slim Fit Jeans",
-                Description = "Denim jeans with a slim fit cut.",
-                CategoryId = 2,
-                Price = 49.99m
-            },
-            new Product
-            {
-                Id = 3,
-                Name = "Hooded Sweatshirt",
-                Description = "Cozy hoodie, great for winter.",
-                CategoryId = 3,
-                Price = 35.00m
-            },
-        };
-
-        public static List<ProductVariant> ProductVariants = new List<ProductVariant>
-        {
-            // Classic T-Shirt Variants
-            new ProductVariant { Id = 1, ProductId = 1, Size = "S", Color = "White", Stock = 20 },
-            new ProductVariant { Id = 2, ProductId = 1, Size = "M", Color = "Black", Stock = 15 },
-            new ProductVariant { Id = 3, ProductId = 1, Size = "L", Color = "Blue", Stock = 10 },
-
-            // Slim Fit Jeans Variants
-            new ProductVariant { Id = 4, ProductId = 2, Size = "30", Color = "Dark Blue", Stock = 25 },
-            new ProductVariant { Id = 5, ProductId = 2, Size = "32", Color = "Light Blue", Stock = 18 },
-            new ProductVariant { Id = 6, ProductId = 2, Size = "34", Color = "Black", Stock = 12 },
-
-            // Hooded Sweatshirt Variants
-            new ProductVariant { Id = 7, ProductId = 3, Size = "M", Color = "Gray", Stock = 22 },
-            new ProductVariant { Id = 8, ProductId = 3, Size = "L", Color = "Red", Stock = 8 },
-            new ProductVariant { Id = 9, ProductId = 3, Size = "XL", Color = "Navy", Stock = 5 }
-        };
+            _mediator = mediator;
+        }
 
         /// <summary>
         /// Gets a list of all products with their category names
         /// </summary>
         /// <response code="200">Returns the list of product DTOs</response>
         [HttpGet]
-        [ProducesResponseType(typeof(List<ProductDTO>), StatusCodes.Status200OK)]
-        public ActionResult<List<ProductDTO>> GetProducts()
+        [ProducesResponseType(typeof(PagedProductsDTO), StatusCodes.Status200OK)]
+        public async Task<ActionResult<PagedProductsDTO>> GetProducts(
+            [FromQuery] GetProductsQuery request
+        )
         {
-            var producDTOs = Products.Select(p =>
-            {
-                var category = CategoryController.Categories.FirstOrDefault(c => c.Id == p.CategoryId);
+            var pagedProducts = await _mediator.Send(request);
 
-                return new ProductDTO
-                {
-                    Id = p.Id,
-                    Name = p.Name,
-                    Description = p.Description,
-                    Price = p.Price,
-                    CategoryId = p.CategoryId,
-                    CategoryName = category.Name
-                };
-            }).ToList();
-
-            return Ok(producDTOs);
+            return Ok(pagedProducts);
         }
 
         /// <summary>
@@ -89,54 +48,33 @@ namespace OnlineClothingStore.Controllers
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(ProductDTO), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult<ProductDTO> GetProduct([FromRoute] int id)
+        public async Task<ActionResult<ProductDTO>> GetProduct([FromRoute] long id)
         {
-            var product = Products.FirstOrDefault(p => p.Id == id);
+            var query = new GetProductQuery() { Id = id };
 
-            if (product is null)
-                return NotFound();
+            var product = await _mediator.Send(query);
 
-            var category = CategoryController.Categories.FirstOrDefault(c => c.Id == product.CategoryId);
-
-            var productDTO = new ProductDTO
-            {
-                Id = product.Id,
-                Name = product.Name,
-                Description = product.Description,
-                Price = product.Price,
-                CategoryId = product.CategoryId,
-                CategoryName = category.Name,
-            };
-
-            return Ok(productDTO);
+            return Ok(product);
         }
 
         /// <summary>
         /// Adds a new product
         /// </summary>
-        /// <param name="productDTO">The data of the product to add</param>
+        /// <param name="request">The data of the product to add</param>
         /// <response code="201">Product was created successfully</response>
-        /// <response code="404">Category not found</response>
+        /// <response code="404">Category or brand not found</response>
+        /// <response code="400">Validation failure</response>
+        /// <response code="409">Product with this name already exists</response>
         [HttpPost]
-        [ProducesResponseType(typeof(Product), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ProductDTO), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult<Product> AddProduct([FromBody] AddProductDTO productDTO)
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        public async Task<ActionResult<ProductDTO>> AddProduct(
+            [FromBody] CreateProductCommand request
+        )
         {
-            var category = CategoryController.Categories.FirstOrDefault(c => c.Id == productDTO.CategoryId);
-
-            if (category is null)
-                return NotFound();
-
-            var product = new Product
-            {
-                Id = Products.Max(p => p.Id) + 1,
-                Name = productDTO.Name,
-                Description = productDTO.Description,
-                Price = productDTO.Price,
-                CategoryId = productDTO.CategoryId
-            };
-
-            Products.Add(product);
+            var product = await _mediator.Send(request);
 
             return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
         }
@@ -145,28 +83,20 @@ namespace OnlineClothingStore.Controllers
         /// Updates a product by id
         /// </summary>
         /// <param name="id">The id of the product to update</param>
-        /// <param name="updatedProduct">The data of the updated product</param>
+        /// <param name="request">The data of the updated product</param>
         /// <response code="204">Product was updated successfully</response>
-        /// <response code="404">Product or category not found</response>
+        /// <response code="404">Product, category or brand not found</response>
+        /// <response code="409">Product with same name or skuprefix already exists</response>
+        /// <response code="400">Validation failure</response>
         [HttpPut("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult UpdateProduct([FromRoute] int id, [FromBody] AddProductDTO updatedProduct)
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult> UpdateProduct([FromRoute] long id, [FromBody] UpdateProductCommand request)
         {
-            var product = Products.FirstOrDefault(p => p.Id == id);
-
-            if (product is null)
-                return NotFound();
-
-            var category = CategoryController.Categories.FirstOrDefault(c => c.Id == updatedProduct.CategoryId);
-
-            if (category is null)
-                return NotFound();
-
-            product.Name = updatedProduct.Name;
-            product.CategoryId = updatedProduct.CategoryId;
-            product.Description = updatedProduct.Description;
-            product.Price = updatedProduct.Price;
+            request.Id = id;
+            await _mediator.Send(request);
 
             return NoContent();
         }
@@ -180,13 +110,10 @@ namespace OnlineClothingStore.Controllers
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult DeleteProduct([FromRoute] int id)
+        public async Task<ActionResult> DeleteProduct([FromRoute] long id)
         {
-            var product = Products.FirstOrDefault(p => p.Id == id);
-
-            if (product is null) return NotFound();
-
-            Products.Remove(product);
+            var command = new DeleteProductCommand() { Id = id };
+            await _mediator.Send(command);
 
             return NoContent();
         }
@@ -198,44 +125,35 @@ namespace OnlineClothingStore.Controllers
         /// <response code="200">Returns list of product variants</response>
         /// <response code="404">Product not found</response>
         [HttpGet("{productId}/variants")]
-        [ProducesResponseType(typeof(List<ProductVariant>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<ProductVariantDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult<List<ProductVariant>> GetProductVariants([FromRoute] int productId)
+        public async Task<ActionResult<List<ProductVariantDTO>>> GetProductVariants([FromRoute] int productId)
         {
-            var product = Products.FirstOrDefault(p => p.Id == productId);
-            if (product is null)
-                return NotFound();
+            var query = new GetProductVariantsQuery() { ProductId = productId };
 
-            var variants = ProductVariants.Where(pv => pv.ProductId == productId).ToList();
-            return Ok(variants);
+            var productVariants = await _mediator.Send(query);
+
+            return Ok(productVariants);
         }
 
         /// <summary>
         /// Adds a new variant for a specific product
         /// </summary>
         /// <param name="productId">The id of the product</param>
-        /// <param name="addProductVariantDTO">The data of the variant to add</param>
+        /// <param name="request">The data of the variant to add</param>
         /// <response code="201">Product variant was created successfully</response>
         /// <response code="404">Product not found</response>
+        /// <response code="409">Product variant with same sku already exists</response>
+        /// <response code="400">Validation failure</response>
         [HttpPost("{productId}/variants")]
-        [ProducesResponseType(typeof(ProductVariant), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ProductVariantDTO), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult<ProductVariant> AddProductVariant([FromRoute] int productId, [FromBody] AddProductVariantDTO addProductVariantDTO)
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<ProductVariantDTO>> AddProductVariant([FromRoute] int productId, [FromBody] CreateProductVariantCommand request)
         {
-            var product = Products.FirstOrDefault(p => p.Id == productId);
-
-            if (product is null)
-                return NotFound();
-
-            var productVariant = new ProductVariant()
-            {
-                Id = ProductVariants.Max(pv => pv.Id) + 1,
-                ProductId = productId,
-                Size = addProductVariantDTO.Size,
-                Color = addProductVariantDTO.Color,
-                Stock = addProductVariantDTO.Stock
-            };
-            ProductVariants.Add(productVariant);
+            request.ProductId = productId;
+            var productVariant = await _mediator.Send(request);
 
             return CreatedAtAction(nameof(GetProduct), new { id = productId }, productVariant);
         }
@@ -243,51 +161,40 @@ namespace OnlineClothingStore.Controllers
         /// <summary>
         /// Updates a variant for a specific product
         /// </summary>
-        /// <param name="productId">The id of the product</param>
         /// <param name="variantId">The id of the variant</param>
-        /// <param name="updateDto">The updated variant data</param>
+        /// <param name="request">The updated variant data</param>
         /// <response code="204">Product variant was updated successfully</response>
         /// <response code="404">Product variant not found</response>
-        [HttpPut("{productId}/variants/{variantId}")]
+        /// <response code="409">Product variant with same sku already exists</response>
+        /// <response code="400">Validation failure</response>
+        [HttpPut("variants/{variantId}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult UpdateProductVariant(
-            [FromRoute] int productId,
-            [FromRoute] int variantId,
-            [FromBody] UpdateProductVariantDTO updateDto)
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task <ActionResult> UpdateProductVariant([FromRoute] int variantId, [FromBody] UpdateProductVariantCommand request)
         {
-            var variant = ProductVariants
-                .FirstOrDefault(pv => pv.Id == variantId && pv.ProductId == productId);
+            request.Id = variantId;
 
-            if (variant is null)
-                return NotFound();
-
-            variant.Size = updateDto.Size;
-            variant.Color = updateDto.Color;
-            variant.Stock = updateDto.Stock;
+            await _mediator.Send(request);
 
             return NoContent();
         }
 
         /// <summary>
-        /// Deletes a variant of a specific product
+        /// Deletes a product variant
         /// </summary>
-        /// <param name="productId">The id of the product</param>
         /// <param name="variantId">The id of the variant</param>
         /// <response code="204">Product variant was deleted successfully</response>
         /// <response code="404">Product variant not found</response>
-        [HttpDelete("{productId}/variants/{variantId}")]
+        [HttpDelete("variants/{variantId}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult DeleteProductVariant([FromRoute] int productId, [FromRoute] int variantId)
+        public async Task<ActionResult> DeleteProductVariant([FromRoute] int variantId)
         {
-            var variant = ProductVariants
-                .FirstOrDefault(pv => pv.Id == variantId && pv.ProductId == productId);
+            var command = new DeleteProductVariantCommand() { Id = variantId };
 
-            if (variant is null)
-                return NotFound();
-
-            ProductVariants.Remove(variant);
+            await _mediator.Send(command);
 
             return NoContent();
         }

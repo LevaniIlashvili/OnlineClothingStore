@@ -35,6 +35,28 @@ namespace OnlineClothingStore.Infrastructure.Repositories
                 new CommandDefinition(sql, cancellationToken: cancellationToken));
         }
 
+        public async Task<Category?> GetByNameAsync(string name, CancellationToken cancellationToken = default)
+        {
+            using var connection = _connectionFactory.CreateConnection();
+            string sql = @"Select Id, Name, ParentCategoryId
+                           FROM Category
+                           WHERE Name = @Name";
+
+            return await connection.QuerySingleOrDefaultAsync<Category>(
+                new CommandDefinition(sql, new { Name = name }, cancellationToken: cancellationToken));
+        }
+
+        public async Task<bool> HasChildrenAsync(long id, CancellationToken cancellationToken = default)
+        {
+            using var connection = _connectionFactory.CreateConnection();
+            string sql = @"SELECT COUNT(*)
+                           FROM Category
+                           WHERE ParentCategoryId = @ParentCategoryId";
+            var childrenCount = await connection.ExecuteScalarAsync<int>(
+                new CommandDefinition(sql, new { ParentCategoryId = id }, cancellationToken: cancellationToken));
+            return childrenCount > 0;
+        }
+
         public async Task<Category> AddAsync(Category category, CancellationToken cancellationToken = default)
         {
             using var connection = _connectionFactory.CreateConnection();
@@ -54,8 +76,8 @@ namespace OnlineClothingStore.Infrastructure.Repositories
                 UPDATE Category
                 SET Name = @Name,
                     ParentCategoryId = @ParentCategoryId,
-                    LastModifiedAt = @LastModifiedAt,
-                    LastModifiedBy = @LastModifiedBy
+                    LastUpdatedAt = @LastUpdatedAt,
+                    LastUpdatedBy = @LastUpdatedBy
                 WHERE Id = @Id";
 
             await connection.ExecuteAsync(

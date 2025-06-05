@@ -30,7 +30,7 @@ namespace OnlineClothingStore.Infrastructure.Repositories
         {
             using var connection = _connectionFactory.CreateConnection();
             string sql = @"
-                SELECT Id, OrderId, ProductVariantId, Quantity, PriceAtPurchase,
+                SELECT Id, OrderId, ProductVariantId, Quantity, PriceAtPurchase
                 FROM OrderItem";
 
             return await connection.QueryAsync<OrderItem>(
@@ -41,7 +41,7 @@ namespace OnlineClothingStore.Infrastructure.Repositories
         {
             using var connection = _connectionFactory.CreateConnection();
             string sql = @"
-                SELECT Id, OrderId, ProductVariantId, Quantity, PriceAtPurchase,
+                SELECT Id, OrderId, ProductVariantId, Quantity, PriceAtPurchase
                 FROM OrderItem
                 WHERE OrderId = @OrderId";
 
@@ -55,11 +55,11 @@ namespace OnlineClothingStore.Infrastructure.Repositories
             string sql = @"
                 INSERT INTO OrderItem 
                     (OrderId, ProductVariantId, Quantity, PriceAtPurchase,
-                     CreatedAt, CreatedBy, UpdatedAt, UpdatedBy)
+                     CreatedAt, CreatedBy)
                 OUTPUT INSERTED.Id, INSERTED.OrderId, INSERTED.ProductVariantId, INSERTED.Quantity, INSERTED.PriceAtPurchase
                 VALUES 
                     (@OrderId, @ProductVariantId, @Quantity, @PriceAtPurchase,
-                     @CreatedAt, @CreatedBy, @UpdatedAt, @UpdatedBy)";
+                     @CreatedAt, @CreatedBy)";
 
             return await connection.QuerySingleAsync<OrderItem>(
                 new CommandDefinition(sql, orderItem, cancellationToken: cancellationToken));
@@ -74,8 +74,8 @@ namespace OnlineClothingStore.Infrastructure.Repositories
                     ProductVariantId = @ProductVariantId,
                     Quantity = @Quantity,
                     PriceAtPurchase = @PriceAtPurchase,
-                    UpdatedAt = @UpdatedAt,
-                    UpdatedBy = @UpdatedBy
+                    LastUpdatedAt = @LastUpdatedAt,
+                    LastUpdatedBy = @LastUpdatedBy
                 WHERE Id = @Id";
 
             await connection.ExecuteAsync(

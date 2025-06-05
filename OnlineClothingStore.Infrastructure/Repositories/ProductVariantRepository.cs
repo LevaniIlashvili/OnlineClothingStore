@@ -18,8 +18,7 @@ namespace OnlineClothingStore.Infrastructure.Repositories
         {
             using var connection = _connectionFactory.CreateConnection();
             string sql = @"
-                SELECT Id, ProductId, Size, Color, Sku, StockQuantity, ImageUrl,
-                       CreatedAt, CreatedBy, UpdatedAt, UpdatedBy
+                SELECT Id, ProductId, Size, Color, Sku, StockQuantity, ImageUrl
                 FROM ProductVariant
                 WHERE Id = @Id";
 
@@ -27,12 +26,24 @@ namespace OnlineClothingStore.Infrastructure.Repositories
                 new CommandDefinition(sql, new { Id = id }, cancellationToken: cancellationToken));
         }
 
+        public async Task<IEnumerable<ProductVariant>> GetByIdsAsync(IEnumerable<long> ids, CancellationToken cancellationToken = default)
+        {
+            using var connection = _connectionFactory.CreateConnection();
+
+            string sql = @"
+                SELECT Id, ProductId, Size, Color, Sku, StockQuantity, ImageUrl
+                FROM ProductVariant
+                WHERE Id IN @Ids";
+
+            return await connection.QueryAsync<ProductVariant>(
+                new CommandDefinition(sql, new { Ids = ids }, cancellationToken: cancellationToken));
+        }
+
         public async Task<IEnumerable<ProductVariant>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             using var connection = _connectionFactory.CreateConnection();
             string sql = @"
-                SELECT Id, ProductId, Size, Color, Sku, StockQuantity, ImageUrl,
-                       CreatedAt, CreatedBy, UpdatedAt, UpdatedBy
+                SELECT Id, ProductId, Size, Color, Sku, StockQuantity, ImageUrl
                 FROM ProductVariant";
 
             return await connection.QueryAsync<ProductVariant>(
@@ -43,13 +54,24 @@ namespace OnlineClothingStore.Infrastructure.Repositories
         {
             using var connection = _connectionFactory.CreateConnection();
             string sql = @"
-                SELECT Id, ProductId, Size, Color, Sku, StockQuantity, ImageUrl,
-                       CreatedAt, CreatedBy, UpdatedAt, UpdatedBy
+                SELECT Id, ProductId, Size, Color, Sku, StockQuantity, ImageUrl
                 FROM ProductVariant
                 WHERE ProductId = @ProductId";
 
             return await connection.QueryAsync<ProductVariant>(
                 new CommandDefinition(sql, new { ProductId = productId }, cancellationToken: cancellationToken));
+        }
+
+        public async Task<ProductVariant?> GetBySkuAsync(string sku, CancellationToken cancellationToken = default)
+        {
+            using var connection = _connectionFactory.CreateConnection();
+            string sql = @"
+                SELECT Id, ProductId, Size, Color, Sku, StockQuantity, ImageUrl
+                FROM ProductVariant
+                WHERE Sku = @Sku";
+
+            return await connection.QuerySingleOrDefaultAsync<ProductVariant>(
+                new CommandDefinition(sql, new { Sku = sku }, cancellationToken: cancellationToken));
         }
 
         public async Task<ProductVariant> AddAsync(ProductVariant variant, CancellationToken cancellationToken = default)
@@ -58,13 +80,12 @@ namespace OnlineClothingStore.Infrastructure.Repositories
             string sql = @"
                 INSERT INTO ProductVariant (
                     ProductId, Size, Color, Sku, StockQuantity, ImageUrl,
-                    CreatedAt, CreatedBy, UpdatedAt, UpdatedBy)
+                    CreatedAt, CreatedBy)
                 OUTPUT INSERTED.Id, INSERTED.ProductId, INSERTED.Size, INSERTED.Color,
-                       INSERTED.Sku, INSERTED.StockQuantity, INSERTED.ImageUrl,
-                       INSERTED.CreatedAt, INSERTED.CreatedBy, INSERTED.UpdatedAt, INSERTED.UpdatedBy
+                       INSERTED.Sku, INSERTED.StockQuantity, INSERTED.ImageUrl
                 VALUES (
                     @ProductId, @Size, @Color, @Sku, @StockQuantity, @ImageUrl,
-                    @CreatedAt, @CreatedBy, @UpdatedAt, @UpdatedBy)";
+                    @CreatedAt, @CreatedBy)";
 
             return await connection.QuerySingleAsync<ProductVariant>(
                 new CommandDefinition(sql, variant, cancellationToken: cancellationToken));
@@ -81,8 +102,8 @@ namespace OnlineClothingStore.Infrastructure.Repositories
                     Sku = @Sku,
                     StockQuantity = @StockQuantity,
                     ImageUrl = @ImageUrl,
-                    UpdatedAt = @UpdatedAt,
-                    UpdatedBy = @UpdatedBy
+                    LastUpdatedAt = @LastUpdatedAt,
+                    LastUpdatedBy = @LastUpdatedBy
                 WHERE Id = @Id";
 
             await connection.ExecuteAsync(
