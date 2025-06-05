@@ -22,10 +22,6 @@ namespace OnlineClothingStore.Application.Features.Products.Commands.CreateProdu
                 .NotEmpty().WithMessage("SKU is required.")
                 .MaximumLength(50).WithMessage("SKU must not exceed 50 characters.");
 
-            RuleFor(pv => pv.StockQuantity)
-                .GreaterThanOrEqualTo(0)
-                .WithMessage("Stock quantity cannot be negative.");
-
             RuleFor(pv => pv.ImageUrl)
                 .MaximumLength(300).WithMessage("Image URL must not exceed 300 characters.")
                 .When(pv => !string.IsNullOrWhiteSpace(pv.ImageUrl));

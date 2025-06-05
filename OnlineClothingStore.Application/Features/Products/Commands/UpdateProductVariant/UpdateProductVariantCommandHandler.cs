@@ -35,7 +35,6 @@ namespace OnlineClothingStore.Application.Features.Products.Commands.UpdateProdu
                 }
             }
 
-
             var product = await _productRepository.GetByIdAsync(request.ProductId, cancellationToken);
 
             if (product is null)
