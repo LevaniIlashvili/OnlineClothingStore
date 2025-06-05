@@ -18,8 +18,7 @@ namespace OnlineClothingStore.Infrastructure.Repositories
         {
             using var connection = _connectionFactory.CreateConnection();
             string sql = @"
-                SELECT Id, UserId, OrderStatusId, OrderDate, TotalAmount, ShippingAddress,
-                       CreatedAt, UpdatedAt
+                SELECT Id, UserId, OrderStatusId, OrderDate, TotalAmount, ShippingAddress
                 FROM [Order]
                 WHERE Id = @Id";
 
@@ -30,8 +29,7 @@ namespace OnlineClothingStore.Infrastructure.Repositories
         {
             using var connection = _connectionFactory.CreateConnection();
             string sql = @"
-                SELECT Id, UserId, OrderStatusId, OrderDate, TotalAmount, ShippingAddress,
-                       CreatedAt, UpdatedAt
+                SELECT Id, UserId, OrderStatusId, OrderDate, TotalAmount, ShippingAddress
                 FROM [Order]
                 WHERE UserId = @UserId";
 
@@ -42,8 +40,7 @@ namespace OnlineClothingStore.Infrastructure.Repositories
         {
             using var connection = _connectionFactory.CreateConnection();
             string sql = @"
-                SELECT Id, UserId, OrderStatusId, OrderDate, TotalAmount, ShippingAddress,
-                       CreatedAt, UpdatedAt
+                SELECT Id, UserId, OrderStatusId, OrderDate, TotalAmount, ShippingAddress
                 FROM [Order]";
 
             return await connection.QueryAsync<Order>(new CommandDefinition(sql, cancellationToken: cancellationToken));
@@ -55,13 +52,12 @@ namespace OnlineClothingStore.Infrastructure.Repositories
             string sql = @"
                 INSERT INTO [Order] 
                     (UserId, OrderStatusId, OrderDate, TotalAmount, ShippingAddress,
-                     CreatedAt, CreatedBy, UpdatedAt, UpdatedBy)
+                     CreatedAt, CreatedBy)
                 OUTPUT INSERTED.Id, INSERTED.UserId, INSERTED.OrderStatusId, INSERTED.OrderDate,
-                       INSERTED.TotalAmount, INSERTED.ShippingAddress, INSERTED.CreatedAt,
-                       INSERTED.UpdatedAt
+                       INSERTED.TotalAmount, INSERTED.ShippingAddress
                 VALUES
                     (@UserId, @OrderStatusId, @OrderDate, @TotalAmount, @ShippingAddress,
-                     @CreatedAt, @CreatedBy, @UpdatedAt, @UpdatedBy)";
+                     @CreatedAt, @CreatedBy)";
 
             return await connection.QuerySingleAsync<Order>(new CommandDefinition(sql, order, cancellationToken: cancellationToken));
         }
@@ -76,8 +72,8 @@ namespace OnlineClothingStore.Infrastructure.Repositories
                     OrderDate = @OrderDate,
                     TotalAmount = @TotalAmount,
                     ShippingAddress = @ShippingAddress,
-                    UpdatedAt = @UpdatedAt,
-                    UpdatedBy = @UpdatedBy
+                    LastUpdatedAt = @LastUpdatedAt,
+                    LastUpdatedBy = @LastUpdatedBy
                 WHERE Id = @Id";
 
             await connection.ExecuteAsync(new CommandDefinition(sql, order, cancellationToken: cancellationToken));
