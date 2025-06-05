@@ -61,6 +61,14 @@ namespace OnlineClothingStore.Infrastructure.Repositories
             await connection.ExecuteAsync(new CommandDefinition(sql, cartItem, cancellationToken: cancellationToken));
         }
 
+        public async Task DeleteByCartIdAsync(long cartId, CancellationToken cancellationToken = default)
+        {
+            using var connection = _connectionFactory.CreateConnection();
+            string sql = "DELETE FROM CartItem WHERE CartId = @CartId";
+
+            await connection.ExecuteAsync(new CommandDefinition(sql, new { CartId = cartId }, cancellationToken: cancellationToken));
+        }
+
         public async Task DeleteAsync(CartItem cartItem, CancellationToken cancellationToken = default)
         {
             using var connection = _connectionFactory.CreateConnection();
