@@ -5,7 +5,6 @@ using OnlineClothingStore.Application.Features.Carts.Commands.AddToCart;
 using OnlineClothingStore.Application.Features.Carts.Commands.RemoveCartItem;
 using OnlineClothingStore.Application.Features.Carts.Commands.UpdateCartItem;
 using OnlineClothingStore.Application.Features.Carts.Queries.GetCart;
-using OnlineClothingStore.Domain.Entities;
 
 namespace OnlineClothingStore.Controllers
 {
@@ -23,15 +22,16 @@ namespace OnlineClothingStore.Controllers
         /// <summary>
         /// Gets the cart for a specific user
         /// </summary>
-        /// <param name="userId">The id of user to get cart for</param>
         /// <response code="200">Returns the cart</response>
         /// <response code="404">Resource not found</response>
-        [HttpGet("{userId}")]
+        /// <response code="401">Authentication Required</response>
+        [HttpGet("")]
         [ProducesResponseType(typeof(CartDTO), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<CartDTO>> GetCart([FromRoute] int userId)
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<ActionResult<CartDTO>> GetCart()
         {
-            var query = new GetCartQuery() { UserId = userId };
+            var query = new GetCartQuery();
 
             var cart = await _mediator.Send(query);
 
@@ -41,46 +41,44 @@ namespace OnlineClothingStore.Controllers
         /// <summary>
         /// Adds an item to user's cart
         /// </summary>
-        /// <param name="userId">The id of user whose cart is being updated</param>
         /// <param name="request">The data of cart item to add</param>
         /// <response code="201">Cart item was created</response>
         /// <response code="404">Resource not found</response>
         /// <response code="400">Validation failure</response>
-        [HttpPost("{userId}/items")]
+        /// <response code="401">Authentication Required</response>
+        [HttpPost("items")]
         [ProducesResponseType(typeof(CartItemDTO), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<CartItemDTO>> AddToCart(
-            [FromRoute] int userId,
-            [FromBody] AddToCartCommand request
-        )
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<ActionResult<CartItemDTO>> AddToCart([FromBody] AddToCartCommand request)
         {
-            request.UserId = userId;
             var cartItem = await _mediator.Send(request);
 
-            return CreatedAtAction(nameof(GetCart), new { userId }, cartItem);
+            return CreatedAtAction(nameof(GetCart), cartItem);
         }
 
         /// <summary>
         /// Updates the quantity of a specific item in a user's cart
         /// </summary>
-        /// <param name="userId">The id of user whose cart item is being updated</param>
         /// <param name="cartItemId">The id of cart item being updated</param>
         /// <param name="request">The updated data for cart item</param>
         /// <response code="200">Cart item was updated</response>
         /// <response code="404">Resource not found</response>
-        /// /// <response code="400">Validation failure</response>
-        [HttpPut("{userId}/items/{cartItemId}")]
+        /// <response code="400">Validation failure</response>
+        /// <response code="401">Authentication Required</response>
+        /// <response code="403">User not authorized</response>
+        [HttpPut("items/{cartItemId}")]
         [ProducesResponseType(typeof(CartItemDTO), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<ActionResult<CartItemDTO>> UpdateCartItem(
-            [FromRoute] int userId,
             [FromRoute] int cartItemId,
             [FromBody] UpdateCartItemCommand request
         )
         {
-            request.UserId = userId;
             request.CartItemId = cartItemId;
             await _mediator.Send(request);
 
@@ -90,19 +88,19 @@ namespace OnlineClothingStore.Controllers
         /// <summary>
         /// Removes an item from user's cart
         /// </summary>
-        /// <param name="userId">The id of user whose cart item is being removed</param>
         /// <param name="cartItemId">The id of cart item being removed</param>
         /// <response code="204">Cart item was deleted</response>
         /// <response code="404">Resource not found</response>
-        [HttpDelete("{userId}/items/{cartItemId}")]
+        /// <response code="401">Authentication Required</response>
+        /// <response code="403">User not authorized</response>
+        [HttpDelete("items/{cartItemId}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> RemoveCartItem(
-            [FromRoute] int userId,
-            [FromRoute] int cartItemId
-        )
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<ActionResult> RemoveCartItem([FromRoute] int cartItemId)
         {
-            var command = new RemoveCartItemCommand { UserId = userId, CartItemId = cartItemId };
+            var command = new RemoveCartItemCommand { CartItemId = cartItemId };
             await _mediator.Send(command);
 
             return NoContent();
