@@ -44,14 +44,25 @@ namespace OnlineClothingStore.Api.Middlewares
                             .Select(e => new { field = e.PropertyName, message = e.ErrorMessage })
                     });
                     break;
+
                 case BadRequestException badRequestException:
                     httpStatusCode = HttpStatusCode.BadRequest;
                     break;
+
                 case NotFoundException:
                     httpStatusCode = HttpStatusCode.NotFound;
                     break;
+
                 case ConflictException:
                     httpStatusCode = HttpStatusCode.Conflict;
+                    break;
+
+                case UnauthorizedAccessException:
+                    httpStatusCode = HttpStatusCode.Unauthorized;
+                    break;
+
+                case ForbiddenException:
+                    httpStatusCode = HttpStatusCode.Forbidden;
                     break;
             }
 

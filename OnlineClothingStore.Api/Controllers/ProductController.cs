@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OnlineClothingStore.Application.DTOs;
 using OnlineClothingStore.Application.Features.Products.Commands.CreateProduct;
@@ -13,6 +14,7 @@ using OnlineClothingStore.Application.Features.Products.Queries.GetProductVarian
 
 namespace OnlineClothingStore.Controllers
 {
+    [Authorize(Roles = "Admin")]
     [Route("api/[controller]")]
     [ApiController]
     public class ProductController : ControllerBase
@@ -30,6 +32,7 @@ namespace OnlineClothingStore.Controllers
         /// <response code="200">Returns the list of product DTOs</response>
         [HttpGet]
         [ProducesResponseType(typeof(PagedProductsDTO), StatusCodes.Status200OK)]
+        [AllowAnonymous]
         public async Task<ActionResult<PagedProductsDTO>> GetProducts(
             [FromQuery] GetProductsQuery request
         )
@@ -48,6 +51,7 @@ namespace OnlineClothingStore.Controllers
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(ProductDTO), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [AllowAnonymous]
         public async Task<ActionResult<ProductDTO>> GetProduct([FromRoute] long id)
         {
             var query = new GetProductQuery() { Id = id };
@@ -65,11 +69,15 @@ namespace OnlineClothingStore.Controllers
         /// <response code="404">Category or brand not found</response>
         /// <response code="400">Validation failure</response>
         /// <response code="409">Product with this name already exists</response>
+        /// <response code="401">Authentication required</response>
+        /// <response code="403">User not authorized</response>
         [HttpPost]
         [ProducesResponseType(typeof(ProductDTO), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<ActionResult<ProductDTO>> AddProduct(
             [FromBody] CreateProductCommand request
         )
@@ -88,11 +96,15 @@ namespace OnlineClothingStore.Controllers
         /// <response code="404">Product, category or brand not found</response>
         /// <response code="409">Product with same name or skuprefix already exists</response>
         /// <response code="400">Validation failure</response>
+        /// <response code="401">Authentication required</response>
+        /// <response code="403">User not authorized</response>
         [HttpPut("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<ActionResult> UpdateProduct([FromRoute] long id, [FromBody] UpdateProductCommand request)
         {
             request.Id = id;
@@ -107,9 +119,13 @@ namespace OnlineClothingStore.Controllers
         /// <param name="id">The id of the product to delete</param>
         /// <response code="204">Product was deleted successfully</response>
         /// <response code="404">Product not found</response>
+        /// <response code="401">Authentication required</response>
+        /// <response code="403">User not authorized</response>
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<ActionResult> DeleteProduct([FromRoute] long id)
         {
             var command = new DeleteProductCommand() { Id = id };
@@ -127,6 +143,7 @@ namespace OnlineClothingStore.Controllers
         [HttpGet("{productId}/variants")]
         [ProducesResponseType(typeof(List<ProductVariantDTO>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [AllowAnonymous]
         public async Task<ActionResult<List<ProductVariantDTO>>> GetProductVariants([FromRoute] int productId)
         {
             var query = new GetProductVariantsQuery() { ProductId = productId };
@@ -145,11 +162,15 @@ namespace OnlineClothingStore.Controllers
         /// <response code="404">Product not found</response>
         /// <response code="409">Product variant with same sku already exists</response>
         /// <response code="400">Validation failure</response>
+        /// <response code="401">Authentication required</response>
+        /// <response code="403">User not authorized</response>
         [HttpPost("{productId}/variants")]
         [ProducesResponseType(typeof(ProductVariantDTO), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<ActionResult<ProductVariantDTO>> AddProductVariant([FromRoute] int productId, [FromBody] CreateProductVariantCommand request)
         {
             request.ProductId = productId;
@@ -167,12 +188,16 @@ namespace OnlineClothingStore.Controllers
         /// <response code="404">Product variant not found</response>
         /// <response code="409">Product variant with same sku already exists</response>
         /// <response code="400">Validation failure</response>
+        /// <response code="401">Authentication required</response>
+        /// <response code="403">User not authorized</response>
         [HttpPut("variants/{variantId}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task <ActionResult> UpdateProductVariant([FromRoute] int variantId, [FromBody] UpdateProductVariantCommand request)
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<ActionResult> UpdateProductVariant([FromRoute] int variantId, [FromBody] UpdateProductVariantCommand request)
         {
             request.Id = variantId;
 
@@ -187,9 +212,13 @@ namespace OnlineClothingStore.Controllers
         /// <param name="variantId">The id of the variant</param>
         /// <response code="204">Product variant was deleted successfully</response>
         /// <response code="404">Product variant not found</response>
+        /// <response code="401">Authentication required</response>
+        /// <response code="403">User not authorized</response>
         [HttpDelete("variants/{variantId}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<ActionResult> DeleteProductVariant([FromRoute] int variantId)
         {
             var command = new DeleteProductVariantCommand() { Id = variantId };

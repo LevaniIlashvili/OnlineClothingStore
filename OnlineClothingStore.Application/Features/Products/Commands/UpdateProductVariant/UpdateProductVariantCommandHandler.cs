@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using MediatR;
 using OnlineClothingStore.Application.Contracts.Infrastructure;
+using OnlineClothingStore.Application.Contracts.Infrastructure.Authentication;
 
 namespace OnlineClothingStore.Application.Features.Products.Commands.UpdateProductVariant
 {
@@ -8,17 +9,25 @@ namespace OnlineClothingStore.Application.Features.Products.Commands.UpdateProdu
     {
         private readonly IProductVariantRepository _productVariantRepository;
         private readonly IProductRepository _productRepository;
+        private readonly ICurrentUserService _currentUserService;
         private readonly IMapper _mapper;
-        
-        public UpdateProductVariantCommandHandler(IProductVariantRepository productVariantRepository, IProductRepository productRepository, IMapper mapper)
+
+        public UpdateProductVariantCommandHandler(
+            IProductVariantRepository productVariantRepository,
+            IProductRepository productRepository,
+            ICurrentUserService currentUserService,
+            IMapper mapper)
         {
             _productVariantRepository = productVariantRepository;
             _productRepository = productRepository;
+            _currentUserService = currentUserService;
             _mapper = mapper;
         }
 
         public async Task Handle(UpdateProductVariantCommand request, CancellationToken cancellationToken)
         {
+            var userId = _currentUserService.UserId;
+
             var existingProductVariant = await _productVariantRepository.GetByIdAsync(request.Id, cancellationToken);
 
             if (existingProductVariant is null)
@@ -44,6 +53,7 @@ namespace OnlineClothingStore.Application.Features.Products.Commands.UpdateProdu
 
             var updatedProductVariant = _mapper.Map(request, existingProductVariant);
             updatedProductVariant.LastUpdatedAt = DateTime.UtcNow;
+            updatedProductVariant.LastUpdatedBy = userId;
 
             await _productVariantRepository.UpdateAsync(updatedProductVariant, cancellationToken);
             

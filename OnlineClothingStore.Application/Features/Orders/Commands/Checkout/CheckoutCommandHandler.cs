@@ -1,6 +1,7 @@
 using AutoMapper;
 using MediatR;
 using OnlineClothingStore.Application.Contracts.Infrastructure;
+using OnlineClothingStore.Application.Contracts.Infrastructure.Authentication;
 using OnlineClothingStore.Application.DTOs;
 using OnlineClothingStore.Domain.Common;
 using OnlineClothingStore.Domain.Entities;
@@ -16,6 +17,7 @@ namespace OnlineClothingStore.Application.Features.Orders.Commands.Checkout
         private readonly IProductVariantRepository _productVariantRepository;
         private readonly IProductRepository _productRepository;
         private readonly IInventoryLogRepository _inventoryLogRepository;
+        private readonly ICurrentUserService _currentUserService;
         private readonly IMapper _mapper;
 
         public CheckoutCommandHandler(
@@ -26,6 +28,7 @@ namespace OnlineClothingStore.Application.Features.Orders.Commands.Checkout
             IProductVariantRepository productVariantRepository,
             IProductRepository productRepository,
             IInventoryLogRepository inventoryLogRepository,
+            ICurrentUserService currentUserService,
             IMapper mapper
         )
         {
@@ -36,13 +39,16 @@ namespace OnlineClothingStore.Application.Features.Orders.Commands.Checkout
             _productVariantRepository = productVariantRepository;
             _productRepository = productRepository;
             _inventoryLogRepository = inventoryLogRepository;
+            _currentUserService = currentUserService;
             _mapper = mapper;
         }
 
         public async Task<OrderDTO> Handle(CheckoutCommand request, CancellationToken cancellationToken)
         {
             var now = DateTime.UtcNow;
-            var cart = await _cartRepository.GetByUserIdAsync(request.UserId, cancellationToken);
+
+            var userId = _currentUserService.UserId;
+            var cart = await _cartRepository.GetByUserIdAsync(userId, cancellationToken);
 
             if (cart is null)
                 throw new Exceptions.NotFoundException("Cart not found");
@@ -78,7 +84,7 @@ namespace OnlineClothingStore.Application.Features.Orders.Commands.Checkout
 
             var order = new Order()
             {
-                UserId = request.UserId,
+                UserId = userId,
                 OrderStatusId = (long)OrderStatus.Processing,
                 OrderDate = now,
                 ShippingAddress = request.ShippingAddress,

@@ -1,14 +1,16 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OnlineClothingStore.Application.DTOs;
 using OnlineClothingStore.Application.Features.Brands.Commands.CreateBrand;
-using OnlineClothingStore.Application.Features.Brands.Commands.UpdateBrand;
 using OnlineClothingStore.Application.Features.Brands.Commands.DeleteBrand;
+using OnlineClothingStore.Application.Features.Brands.Commands.UpdateBrand;
 using OnlineClothingStore.Application.Features.Brands.Queries.GetBrand;
 using OnlineClothingStore.Application.Features.Brands.Queries.GetBrands;
 
 namespace OnlineClothingStore.Controllers
 {
+    [Authorize(Roles = "Admin")]
     [Route("api/[controller]")]
     [ApiController]
     public class BrandController : ControllerBase
@@ -26,6 +28,7 @@ namespace OnlineClothingStore.Controllers
         /// <response code="200">Brands retrieved successfully</response>
         [HttpGet]
         [ProducesResponseType(typeof(List<BrandDTO>), StatusCodes.Status200OK)]
+        [AllowAnonymous]
         public async Task<ActionResult<List<BrandDTO>>> GetBrands()
         {
             var query = new GetBrandsQuery();
@@ -42,6 +45,7 @@ namespace OnlineClothingStore.Controllers
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(BrandDTO), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [AllowAnonymous]
         public async Task<ActionResult<BrandDTO>> GetBrand([FromRoute] long id)
         {
             var query = new GetBrandQuery { Id = id };
@@ -54,12 +58,16 @@ namespace OnlineClothingStore.Controllers
         /// </summary>
         /// <param name="request">The brand to create</param>
         /// <response code="201">Brand created successfully</response>
-        /// <response code="409">Brand with the same name already exists</response>
         /// <response code="400">Validation failure</response>
+        /// <response code="409">Brand with the same name already exists</response>
+        /// <response code="401">Authentication required</response>
+        /// <response code="403">User not authorized</response>
         [HttpPost]
         [ProducesResponseType(typeof(BrandDTO), StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status409Conflict)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<ActionResult<BrandDTO>> CreateBrand([FromBody] CreateBrandCommand request)
         {
             var brand = await _mediator.Send(request);
@@ -72,14 +80,18 @@ namespace OnlineClothingStore.Controllers
         /// <param name="id">Brand ID</param>
         /// <param name="request">Updated brand info</param>
         /// <response code="204">Brand updated successfully</response>
-        /// <response code="404">Brand not found</response>
-        /// <response code="409">Brand with different id and same name already exists</response>
         /// <response code="400">Validation failure</response>
+        /// <response code="404">Brand not found</response>
+        /// <response code="409">Another brand with the same name already exists</response>
+        /// <response code="401">Authentication required</response>
+        /// <response code="403">User not authorized</response>
         [HttpPut("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> UpdateBrand([FromRoute] long id, [FromBody] UpdateBrandCommand request)
         {
             request.Id = id;
@@ -93,9 +105,13 @@ namespace OnlineClothingStore.Controllers
         /// <param name="id">The brand id</param>
         /// <response code="204">Brand deleted successfully</response>
         /// <response code="404">Brand not found</response>
+        /// <response code="401">Authentication required</response>
+        /// <response code="403">User not authorized</response>
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> DeleteBrand([FromRoute] long id)
         {
             var request = new DeleteBrandCommand { Id = id };

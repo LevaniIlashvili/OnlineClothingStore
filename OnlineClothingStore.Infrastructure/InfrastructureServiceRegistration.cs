@@ -1,13 +1,16 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using OnlineClothingStore.Application;
 using OnlineClothingStore.Application.Contracts.Infrastructure;
+using OnlineClothingStore.Application.Contracts.Infrastructure.Authentication;
+using OnlineClothingStore.Infrastructure.Authentication;
 using OnlineClothingStore.Infrastructure.Repositories;
 
 namespace OnlineClothingStore.Infrastructure
 {
     public static class InfrastructureServiceRegistration
     {
-        public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
+        public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddSingleton<IDbConnectionFactory, SqlConnectionFactory>();
 
@@ -22,6 +25,11 @@ namespace OnlineClothingStore.Infrastructure
             services.AddScoped<IOrderItemRepository, OrderItemRepository>();
             services.AddScoped<IPaymentRepository, PaymentRepository>();
             services.AddScoped<IInventoryLogRepository, InventoryLogRepository>();
+
+            services.Configure<JwtSettings>(configuration.GetSection("JwtSettings"));
+            services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
+            services.AddScoped<IPasswordHasher, PasswordHasher>();
+            services.AddScoped<ICurrentUserService, CurrentUserService>();
 
             return services;
         }

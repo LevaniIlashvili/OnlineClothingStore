@@ -12,7 +12,6 @@ namespace OnlineClothingStore.Domain.Entities
         public string? PhoneNumber { get; set; }
         public long RoleId { get; set; }
 
-        public UserRole Role { get; set; } = null!;
         public Cart? Cart { get; set; }
         public ICollection<Order> Orders { get; set; } = new List<Order>();
     }

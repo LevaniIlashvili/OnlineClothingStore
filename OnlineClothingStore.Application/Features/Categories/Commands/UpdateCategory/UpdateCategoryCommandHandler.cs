@@ -1,18 +1,24 @@
 ﻿using MediatR;
 using OnlineClothingStore.Application.Contracts.Infrastructure;
+using OnlineClothingStore.Application.Contracts.Infrastructure.Authentication;
 
 namespace OnlineClothingStore.Application.Features.Categories.Commands.UpdateCategory
 {
     public class UpdateCategoryCommandHandler : IRequestHandler<UpdateCategoryCommand>
     {
         private readonly ICategoryRepository _categoryRepository;
+        private readonly ICurrentUserService _currentUserService;
 
-        public UpdateCategoryCommandHandler(ICategoryRepository categoryRepository)
+        public UpdateCategoryCommandHandler(ICategoryRepository categoryRepository, ICurrentUserService currentUserService)
         {
-            _categoryRepository = categoryRepository;        }
+            _categoryRepository = categoryRepository;
+            _currentUserService = currentUserService;
+        }
 
         public async Task Handle(UpdateCategoryCommand request, CancellationToken cancellationToken)
         {
+            var userId = _currentUserService.UserId;
+
             var existingCategory = await _categoryRepository.GetByIdAsync(request.Id, cancellationToken);
 
             if (existingCategory is null)
@@ -40,6 +46,7 @@ namespace OnlineClothingStore.Application.Features.Categories.Commands.UpdateCat
             existingCategory.Name = normalizedName;
             existingCategory.ParentCategoryId = request.ParentCategoryId;
             existingCategory.LastUpdatedAt = DateTime.UtcNow;
+            existingCategory.LastUpdatedBy = userId;
 
             await _categoryRepository.UpdateAsync(existingCategory, cancellationToken);
         }

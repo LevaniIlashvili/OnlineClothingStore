@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using MediatR;
 using OnlineClothingStore.Application.Contracts.Infrastructure;
+using OnlineClothingStore.Application.Contracts.Infrastructure.Authentication;
 using OnlineClothingStore.Application.DTOs;
 
 namespace OnlineClothingStore.Application.Features.Carts.Queries.GetCart
@@ -8,17 +9,21 @@ namespace OnlineClothingStore.Application.Features.Carts.Queries.GetCart
     public class GetCartQueryHandler : IRequestHandler<GetCartQuery, CartDTO>
     {
         private readonly ICartRepository _cartRepository;
+        private readonly ICurrentUserService _currentUserService;
         private readonly IMapper _mapper;
 
-        public GetCartQueryHandler(ICartRepository cartRepository, IMapper mapper)
+        public GetCartQueryHandler(ICartRepository cartRepository, ICurrentUserService currentUserService, IMapper mapper)
         {
             _cartRepository = cartRepository;
+            _currentUserService = currentUserService;
             _mapper = mapper;
         }
 
         public async Task<CartDTO> Handle(GetCartQuery request, CancellationToken cancellationToken)
         {
-            var cart = await _cartRepository.GetByUserIdAsync(request.UserId, cancellationToken);
+            var userId = _currentUserService.UserId;
+
+            var cart = await _cartRepository.GetByUserIdAsync(userId, cancellationToken);
 
             if (cart is null)
             {

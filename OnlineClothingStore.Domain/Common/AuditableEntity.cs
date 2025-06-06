@@ -2,9 +2,9 @@
 {
     public class AuditableEntity
     {
-        public string? CreatedBy { get; set; }
+        public long? CreatedBy { get; set; }
         public DateTime CreatedAt { get; set; }
-        public string? LastUpdatedBy { get; set; }
+        public long? LastUpdatedBy { get; set; }
         public DateTime LastUpdatedAt { get; set; }
     }
 }

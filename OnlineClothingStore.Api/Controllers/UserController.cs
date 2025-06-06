@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using OnlineClothingStore.Application.Features.Users.Commands;
+using OnlineClothingStore.Application.Features.Users.Queries;
 
 namespace OnlineClothingStore.Controllers
 {
@@ -22,7 +23,7 @@ namespace OnlineClothingStore.Controllers
         /// <response code="200">User created successfully</response>
         /// <response code="409">User with this email already exists</response>
         /// <response code="400">Validation failure</response>
-        [HttpPost]
+        [HttpPost("register")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -31,6 +32,14 @@ namespace OnlineClothingStore.Controllers
             var userId = await _mediator.Send(request);
 
             return Ok(userId);
+        }
+
+        [HttpPost("login")]
+        public async Task<ActionResult> LoginUser(LoginUserQuery request)
+        {
+            var token = await _mediator.Send(request);
+
+            return Ok(token);
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OnlineClothingStore.Application.Contracts.Infrastructure;
 using OnlineClothingStore.Application.DTOs;
@@ -10,6 +11,7 @@ using OnlineClothingStore.Application.Features.Categories.Queries.GetCategory;
 
 namespace OnlineClothingStore.Controllers
 {
+    [Authorize(Roles = "Admin")]
     [Route("api/[controller]")]
     [ApiController]
     public class CategoryController : ControllerBase
@@ -29,6 +31,7 @@ namespace OnlineClothingStore.Controllers
         /// <response code="200">Categories retrieved successfully</response>
         [HttpGet]
         [ProducesResponseType(typeof(List<CategoryDTO>), StatusCodes.Status200OK)]
+        [AllowAnonymous]
         public async Task<ActionResult<List<CategoryDTO>>> GetCategories()
         {
             var query = new GetCategoriesQuery();
@@ -45,6 +48,7 @@ namespace OnlineClothingStore.Controllers
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(CategoryDTO), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [AllowAnonymous]
         public async Task<ActionResult<CategoryDTO>> GetCategory([FromRoute] long id)
         {
             var query = new GetCategoryQuery() { Id = id };
@@ -61,15 +65,18 @@ namespace OnlineClothingStore.Controllers
         /// <response code="409">Category with same name already exists</response>
         /// <response code="404">Parent category not found</response>
         /// <response code="400">Validation failure</response>
+        /// <response code="401">Authentication required</response>
+        /// <response code="403">User not authorized</response>
         [HttpPost]
         [ProducesResponseType(typeof(CategoryDTO), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<ActionResult<CategoryDTO>> AddCategory([FromBody] CreateCategoryCommand request)
         {
             var category = await _mediator.Send(request);
-
             return CreatedAtAction(nameof(GetCategory), new { category.Id }, category);
         }
 
@@ -82,16 +89,19 @@ namespace OnlineClothingStore.Controllers
         /// <response code="404">Category or parent category not found</response>
         /// <response code="409">Category with different id and this name already exists</response>
         /// <response code="400">Validation failure</response>
+        /// <response code="401">Authentication required</response>
+        /// <response code="403">User not authorized</response>
         [HttpPut("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<ActionResult> UpdateCategory([FromRoute] long id, [FromBody] UpdateCategoryCommand request)
         {
             request.Id = id;
             await _mediator.Send(request);
-
             return NoContent();
         }
 
@@ -101,17 +111,19 @@ namespace OnlineClothingStore.Controllers
         /// <param name="id">The id of category to delete</param>
         /// <response code="204">Category deleted successfully</response>
         /// <response code="404">Category not found</response>
-        /// <response code="409">Cannot delete category has subcategories</response>
+        /// <response code="409">Cannot delete category that has subcategories</response>
+        /// <response code="401">Authentication required</response>
+        /// <response code="403">User not authorized</response>
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<ActionResult> DeleteCategory([FromRoute] long id)
         {
             var request = new DeleteCategoryCommand() { Id = id };
-
             await _mediator.Send(request);
-
             return NoContent();
         }
     }
