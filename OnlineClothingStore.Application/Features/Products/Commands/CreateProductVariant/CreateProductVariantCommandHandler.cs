@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using MediatR;
 using OnlineClothingStore.Application.Contracts.Infrastructure;
+using OnlineClothingStore.Application.Contracts.Infrastructure.Authentication;
 using OnlineClothingStore.Application.DTOs;
 using OnlineClothingStore.Domain.Entities;
 
@@ -10,20 +11,25 @@ namespace OnlineClothingStore.Application.Features.Products.Commands.CreateProdu
     {
         private readonly IProductVariantRepository _productVariantRepository;
         private readonly IProductRepository _productRepository;
+        private readonly ICurrentUserService _currentUserService;
         private readonly IMapper _mapper;
 
         public CreateProductVariantCommandHandler(
             IProductVariantRepository productVariantRepository, 
             IProductRepository productRepository, 
+            ICurrentUserService currentUserService,
             IMapper mapper)
         {
             _productVariantRepository = productVariantRepository;
             _productRepository = productRepository;
+            _currentUserService = currentUserService;
             _mapper = mapper;
         }
 
         public async Task<ProductVariantDTO> Handle(CreateProductVariantCommand request, CancellationToken cancellationToken)
         {
+            var userId = _currentUserService.UserId;
+
             var product = await _productRepository.GetByIdAsync(request.ProductId, cancellationToken);
 
             if (product is null)
@@ -40,6 +46,7 @@ namespace OnlineClothingStore.Application.Features.Products.Commands.CreateProdu
 
             var variantToAdd = _mapper.Map<ProductVariant>(request);
             variantToAdd.CreatedAt = DateTime.UtcNow;
+            variantToAdd.CreatedBy = userId;
             var addedVariant = await _productVariantRepository.AddAsync(variantToAdd, cancellationToken);
 
             return _mapper.Map<ProductVariantDTO>(addedVariant);

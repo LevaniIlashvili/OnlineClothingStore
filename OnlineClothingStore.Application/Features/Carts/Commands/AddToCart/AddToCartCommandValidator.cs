@@ -6,10 +6,6 @@ namespace OnlineClothingStore.Application.Features.Carts.Commands.AddToCart
     {
         public AddToCartCommandValidator()
         {
-            RuleFor(x => x.UserId)
-                .GreaterThan(0)
-                .WithMessage("UserId must be greater than 0.");
-
             RuleFor(x => x.ProductVariantId)
                 .GreaterThan(0)
                 .WithMessage("ProductVariantId must be greater than 0.");

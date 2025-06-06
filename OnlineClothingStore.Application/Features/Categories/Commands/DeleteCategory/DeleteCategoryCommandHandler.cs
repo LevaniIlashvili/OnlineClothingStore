@@ -28,6 +28,8 @@ namespace OnlineClothingStore.Application.Features.Categories.Commands.DeleteCat
                 throw new Exceptions.ConflictException("Cannot delete category because it has subcategories");
             }
 
+            // TODO: check if has products
+
             await _categoryRepository.DeleteAsync(existingCategory, cancellationToken);
         }
     }

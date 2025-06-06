@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using MediatR;
 using OnlineClothingStore.Application.Contracts.Infrastructure;
+using OnlineClothingStore.Application.Contracts.Infrastructure.Authentication;
 using OnlineClothingStore.Application.DTOs;
 using OnlineClothingStore.Domain.Entities;
 
@@ -11,23 +12,28 @@ namespace OnlineClothingStore.Application.Features.Carts.Commands.AddToCart
         private readonly ICartRepository _cartRepository;
         private readonly ICartItemRepository _cartItemRepository;
         private readonly IProductVariantRepository _productVariantRepository;
+        private readonly ICurrentUserService _currentUserService;
         private readonly IMapper _mapper;
 
         public AddToCartCommandHandler(
             ICartRepository cartRepository,
             ICartItemRepository cartItemRepository,
             IProductVariantRepository productVariantRepository,
+            ICurrentUserService currentUserService,
             IMapper mapper)
         {
             _cartRepository = cartRepository;
             _cartItemRepository = cartItemRepository;
             _productVariantRepository = productVariantRepository;
+            _currentUserService = currentUserService;
             _mapper = mapper;
         }
 
         public async Task<CartItemDTO> Handle(AddToCartCommand request, CancellationToken cancellationToken)
         {
-            var cart = await _cartRepository.GetByUserIdAsync(request.UserId, cancellationToken);
+            var userId = _currentUserService.UserId;
+
+            var cart = await _cartRepository.GetByUserIdAsync(userId, cancellationToken);
 
             if (cart is null)
             {

@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using MediatR;
 using OnlineClothingStore.Application.Contracts.Infrastructure;
+using OnlineClothingStore.Application.Contracts.Infrastructure.Authentication;
 using OnlineClothingStore.Domain.Entities;
 
 namespace OnlineClothingStore.Application.Features.Users.Commands
@@ -9,12 +10,18 @@ namespace OnlineClothingStore.Application.Features.Users.Commands
     {
         private readonly IUserRepository _userRepository;
         private readonly ICartRepository _cartRepository;
+        private readonly IPasswordHasher _passwordHasher;
         private readonly IMapper _mapper;
 
-        public CreateUserCommandHandler(IUserRepository userRepository, ICartRepository cartRepository, IMapper mapper)
+        public CreateUserCommandHandler(
+            IUserRepository userRepository,
+            ICartRepository cartRepository, 
+            IPasswordHasher passwordHasher,
+            IMapper mapper)
         {
             _userRepository = userRepository;
             _cartRepository = cartRepository;
+            _passwordHasher = passwordHasher;
             _mapper = mapper;
         }
 
@@ -28,8 +35,8 @@ namespace OnlineClothingStore.Application.Features.Users.Commands
             }
 
             var user = _mapper.Map<User>(request);
-            user.PasswordHash = request.Password;
-            user.RoleId = 1;
+            user.PasswordHash = _passwordHasher.HashPassword(request.Password);
+            user.RoleId = 2;
             user.CreatedAt = DateTime.UtcNow;
 
             var addedUser = await _userRepository.AddAsync(user, cancellationToken);

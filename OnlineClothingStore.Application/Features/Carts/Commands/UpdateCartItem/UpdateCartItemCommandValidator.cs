@@ -6,8 +6,6 @@ namespace OnlineClothingStore.Application.Features.Carts.Commands.UpdateCartItem
     {
         public UpdateCartItemCommandValidator()
         {
-            RuleFor(x => x.UserId).GreaterThan(0).WithMessage("UserId must be greater than 0.");
-
             RuleFor(x => x.CartItemId)
                 .GreaterThan(0)
                 .WithMessage("CartItemId must be greater than 0.");

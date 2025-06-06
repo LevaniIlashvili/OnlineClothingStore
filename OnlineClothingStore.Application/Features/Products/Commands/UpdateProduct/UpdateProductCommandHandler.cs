@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using MediatR;
 using OnlineClothingStore.Application.Contracts.Infrastructure;
+using OnlineClothingStore.Application.Contracts.Infrastructure.Authentication;
 
 namespace OnlineClothingStore.Application.Features.Products.Commands.UpdateProduct
 {
@@ -9,22 +10,27 @@ namespace OnlineClothingStore.Application.Features.Products.Commands.UpdateProdu
         private readonly IProductRepository _productRepository;
         private readonly ICategoryRepository _categoryRepository;
         private readonly IBrandRepository _brandRepository;
+        private readonly ICurrentUserService _currentUserService;
         private readonly IMapper _mapper;
 
         public UpdateProductCommandHandler(
             IProductRepository productRepository, 
             ICategoryRepository categoryRepository, 
             IBrandRepository brandRepository,
+            ICurrentUserService currentUserService,
             IMapper mapper)
         {
             _productRepository = productRepository;
             _categoryRepository = categoryRepository;
             _brandRepository = brandRepository;
+            _currentUserService = currentUserService;
             _mapper = mapper;
         }
 
         public async Task Handle(UpdateProductCommand request, CancellationToken cancellationToken)
         {
+            var userId = _currentUserService.UserId;
+
             var existingProduct = await _productRepository.GetByIdAsync(request.Id, cancellationToken);
 
             if (existingProduct is null)
@@ -66,6 +72,7 @@ namespace OnlineClothingStore.Application.Features.Products.Commands.UpdateProdu
 
             var updatedProduct = _mapper.Map(request, existingProduct);
             updatedProduct.LastUpdatedAt = DateTime.UtcNow;
+            updatedProduct.LastUpdatedBy = userId;
 
             await _productRepository.UpdateAsync(updatedProduct, cancellationToken);
         }

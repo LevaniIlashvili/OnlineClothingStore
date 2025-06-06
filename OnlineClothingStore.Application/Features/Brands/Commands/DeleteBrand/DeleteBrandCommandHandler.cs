@@ -21,6 +21,8 @@ namespace OnlineClothingStore.Application.Features.Brands.Commands.DeleteBrand
                 throw new Exceptions.NotFoundException("Brand with this id doesn't exist");
             }
 
+            // TODO: check if brand has products
+
             await _brandRepository.DeleteAsync(existingBrand, cancellationToken);
         }
     }
