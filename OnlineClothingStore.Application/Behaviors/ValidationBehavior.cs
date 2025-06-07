@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace OnlineClothingStore.Application.Behaviors
 {
@@ -7,10 +8,14 @@ namespace OnlineClothingStore.Application.Behaviors
         where TRequest : notnull
     {
         private readonly IEnumerable<IValidator<TRequest>> _validators;
+        private readonly ILogger<ValidationBehavior<TRequest, TResponse>> _logger;
 
-        public ValidationBehavior(IEnumerable<IValidator<TRequest>> validators)
+        public ValidationBehavior(
+            IEnumerable<IValidator<TRequest>> validators,
+            ILogger<ValidationBehavior<TRequest, TResponse>> logger)
         {
             _validators = validators;
+            _logger = logger;
         }
 
         public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
@@ -22,7 +27,12 @@ namespace OnlineClothingStore.Application.Behaviors
                 var failures = validationResults.SelectMany(r => r.Errors).Where(f => f != null).ToList();
 
                 if (failures.Count != 0)
+                {
+                    var requestName = typeof(TRequest).Name;
+                    _logger.LogWarning("Validation failed for request {RequestName}. Errors: {@Failures}", requestName, failures);
                     throw new ValidationException(failures);
+                }
+
             }
 
             return await next();
