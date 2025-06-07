@@ -57,6 +57,17 @@ namespace OnlineClothingStore.Infrastructure.Repositories
             return childrenCount > 0;
         }
 
+        public async Task<bool> HasProductsAsync(long categoryId, CancellationToken cancellationToken = default)
+        {
+            using var connection = _connectionFactory.CreateConnection();
+            string sql = @"SELECT COUNT(*)
+                           FROM Product
+                           WHERE CategoryId = @CategoryId";
+            var productCount = await connection.ExecuteScalarAsync<int>(
+                new CommandDefinition(sql, new { CategoryId = categoryId }, cancellationToken: cancellationToken));
+            return productCount > 0;
+        }
+
         public async Task<Category> AddAsync(Category category, CancellationToken cancellationToken = default)
         {
             using var connection = _connectionFactory.CreateConnection();
