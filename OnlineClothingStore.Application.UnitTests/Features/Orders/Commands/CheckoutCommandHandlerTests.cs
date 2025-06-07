@@ -6,6 +6,8 @@ using OnlineClothingStore.Application.Features.Orders.Commands.Checkout;
 using OnlineClothingStore.Domain.Entities;
 using OnlineClothingStore.Application.Exceptions;
 using OnlineClothingStore.Application.DTOs;
+using Castle.Core.Logging;
+using Microsoft.Extensions.Logging;
 
 namespace OnlineClothingStore.Application.UnitTests.Features.Orders.Commands
 {
@@ -20,6 +22,7 @@ namespace OnlineClothingStore.Application.UnitTests.Features.Orders.Commands
         private readonly Mock<IInventoryLogRepository> _inventoryLogRepositoryMock;
         private readonly Mock<ICurrentUserService> _currentUserServiceMock;
         private readonly Mock<IMapper> _mapperMock;
+        private readonly Mock<ILogger<CheckoutCommandHandler>> _loggerMock;
         private readonly CheckoutCommandHandler _handler;
 
         public CheckoutCommandHandlerTests()
@@ -33,6 +36,7 @@ namespace OnlineClothingStore.Application.UnitTests.Features.Orders.Commands
             _inventoryLogRepositoryMock = new Mock<IInventoryLogRepository>();
             _currentUserServiceMock = new Mock<ICurrentUserService>();
             _mapperMock = new Mock<IMapper>();
+            _loggerMock = new Mock<ILogger<CheckoutCommandHandler>>();
 
             _handler = new CheckoutCommandHandler(
                 _cartRepositoryMock.Object,
@@ -43,7 +47,8 @@ namespace OnlineClothingStore.Application.UnitTests.Features.Orders.Commands
                 _productRepositoryMock.Object,
                 _inventoryLogRepositoryMock.Object,
                 _currentUserServiceMock.Object,
-                _mapperMock.Object
+                _mapperMock.Object,
+                _loggerMock.Object
             );
         }
 
