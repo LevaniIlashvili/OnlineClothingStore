@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.10.35027.167 
+VisualStudioVersion = 17.10.35027.167
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OnlineClothingStore.Api", "OnlineClothingStore.Api\OnlineClothingStore.Api.csproj", "{65EFFB61-0E22-4A53-88C4-6E430B8ACFC7}"
 EndProject
@@ -10,11 +10,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.gitignore = .gitignore
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OnlineClothingStore.Domain", "OnlineClothingStore.Domain\OnlineClothingStore.Domain.csproj", "{88E01436-ED18-4870-9EDD-E32B1AAB72EC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OnlineClothingStore.Domain", "OnlineClothingStore.Domain\OnlineClothingStore.Domain.csproj", "{88E01436-ED18-4870-9EDD-E32B1AAB72EC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OnlineClothingStore.Application", "OnlineClothingStore.Application\OnlineClothingStore.Application.csproj", "{E1CFA2AB-098A-4CA4-996A-7CF87C5AACEF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OnlineClothingStore.Application", "OnlineClothingStore.Application\OnlineClothingStore.Application.csproj", "{E1CFA2AB-098A-4CA4-996A-7CF87C5AACEF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OnlineClothingStore.Infrastructure", "OnlineClothingStore.Infrastructure\OnlineClothingStore.Infrastructure.csproj", "{2C7A6C13-9D5C-4219-A1F0-8E374F43CD77}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OnlineClothingStore.Infrastructure", "OnlineClothingStore.Infrastructure\OnlineClothingStore.Infrastructure.csproj", "{2C7A6C13-9D5C-4219-A1F0-8E374F43CD77}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OnlineClothingStore.Application.UnitTests", "OnlineClothingStore.Application.UnitTests\OnlineClothingStore.Application.UnitTests.csproj", "{371ACEF6-4E8F-4DE8-AD64-483AEC8A08F9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -38,6 +40,10 @@ Global
 		{2C7A6C13-9D5C-4219-A1F0-8E374F43CD77}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2C7A6C13-9D5C-4219-A1F0-8E374F43CD77}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2C7A6C13-9D5C-4219-A1F0-8E374F43CD77}.Release|Any CPU.Build.0 = Release|Any CPU
+		{371ACEF6-4E8F-4DE8-AD64-483AEC8A08F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{371ACEF6-4E8F-4DE8-AD64-483AEC8A08F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{371ACEF6-4E8F-4DE8-AD64-483AEC8A08F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{371ACEF6-4E8F-4DE8-AD64-483AEC8A08F9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -8,10 +8,12 @@ namespace OnlineClothingStore.Api.Middlewares
     public class ExceptionHandlerMiddleware
     {
         private readonly RequestDelegate _next;
+        private readonly ILogger<ExceptionHandlerMiddleware> _logger;
 
-        public ExceptionHandlerMiddleware(RequestDelegate next)
+        public ExceptionHandlerMiddleware(RequestDelegate next, ILogger<ExceptionHandlerMiddleware> logger)
         {
             _next = next;
+            _logger = logger;
         }
 
         public async Task Invoke(HttpContext context)
@@ -63,6 +65,10 @@ namespace OnlineClothingStore.Api.Middlewares
 
                 case ForbiddenException:
                     httpStatusCode = HttpStatusCode.Forbidden;
+                    break;
+                default:
+                    _logger.LogError(exception, "An unexpected error occurred.");
+                    result = JsonSerializer.Serialize(new { error = "An unexpected error occurred. Please try again later." });
                     break;
             }
 

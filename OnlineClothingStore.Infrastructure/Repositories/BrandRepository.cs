@@ -48,6 +48,17 @@ namespace OnlineClothingStore.Infrastructure.Repositories
                 new CommandDefinition(sql, new { Name = name },cancellationToken: cancellationToken));
         }
 
+        public async Task<bool> HasProductsAsync(long brandId, CancellationToken cancellationToken = default)
+        {
+            using var connection = _connectionFactory.CreateConnection();
+            string sql = @"SELECT COUNT(*) FROM Product WHERE BrandId = @BrandId";
+
+            int count = await connection.QuerySingleAsync<int>(
+                new CommandDefinition(sql, new { BrandId = brandId }, cancellationToken: cancellationToken));
+
+            return count > 0;
+        }
+
         public async Task<Brand> AddAsync(Brand brand, CancellationToken cancellationToken = default
         )
         {
