@@ -36,10 +36,9 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddHealthChecks().AddSqlServer(
-        connectionString: builder.Configuration.GetConnectionString("DefaultConnection")); ;
+    connectionString: builder.Configuration.GetConnectionString("DefaultConnection"));
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -50,22 +49,35 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-app.MapHealthChecks("/health");
+var logger = app.Services.GetRequiredService<ILogger<Program>>();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+try
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    logger.LogInformation("Starting OnlineClothingStore application");
+
+    app.MapHealthChecks("/health");
+
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI();
+    }
+
+    app.UseCustomExceptionHandler();
+
+    app.UseHttpsRedirection();
+
+    app.UseAuthentication();
+    app.UseAuthorization();
+
+    app.MapControllers();
+
+    logger.LogInformation("OnlineClothingStore application started successfully");
+
+    app.Run();
 }
-
-app.UseCustomExceptionHandler();
-
-app.UseHttpsRedirection();
-
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.MapControllers();
-
-app.Run();
+catch (Exception ex)
+{
+    logger.LogCritical(ex, "OnlineClothingStore application failed to start");
+    throw;
+}
