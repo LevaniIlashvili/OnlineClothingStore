@@ -56,13 +56,24 @@ namespace OnlineClothingStore.Application.Features.Orders.Commands.Checkout
             if (!cart.Items.Any())
                 throw new Exceptions.BadRequestException("Cart is empty");
 
-            var variantIds = cart.Items.Select(i => i.ProductVariantId).Distinct();
+            await PopulateCartItemsWithProductVariantsAndProductsAsync(cart.Items, cancellationToken);
+
+            var order = await CreateOrderAsync(cart.Items, userId, request.ShippingAddress, now, cancellationToken);
+
+            await _cartItemRepository.DeleteByCartIdAsync(cart.Id, cancellationToken);
+
+            return _mapper.Map<OrderDTO>(order);
+        }
+
+        private async Task PopulateCartItemsWithProductVariantsAndProductsAsync(ICollection<CartItem> cartItems, CancellationToken cancellationToken)
+        {
+            var variantIds = cartItems.Select(i => i.ProductVariantId).Distinct();
             var variants = (await _productVariantRepository.GetByIdsAsync(variantIds, cancellationToken)).ToDictionary(v => v.Id);
 
             var productIds = variants.Values.Select(v => v.ProductId).Distinct();
             var products = (await _productRepository.GetByIdsAsync(productIds, cancellationToken)).ToDictionary(p => p.Id);
 
-            foreach (var item in cart.Items)
+            foreach (var item in cartItems)
             {
                 if (!variants.TryGetValue(item.ProductVariantId, out var variant))
                     throw new Exceptions.NotFoundException($"Product variant with Id {item.ProductVariantId} not found");
@@ -77,22 +88,30 @@ namespace OnlineClothingStore.Application.Features.Orders.Commands.Checkout
 
                 item.ProductVariant.Product = product;
             }
+        }
 
-            var orderTotalAmount = cart.Items.Sum(i => i.ProductVariant.Product.Price * i.Quantity);
+        private async Task<Order> CreateOrderAsync(
+            ICollection<CartItem> cartItems, 
+            long userId,
+            string shippingAddress, 
+            DateTime now, 
+            CancellationToken cancellationToken)
+        {
+            var orderTotalAmount = cartItems.Sum(i => i.ProductVariant.Product.Price * i.Quantity);
 
             var order = new Order()
             {
                 UserId = userId,
                 OrderStatusId = (long)OrderStatus.Processing,
                 OrderDate = now,
-                ShippingAddress = request.ShippingAddress,
+                ShippingAddress = shippingAddress,
                 TotalAmount = orderTotalAmount,
                 CreatedAt = now
             };
 
             order = await _orderRepository.AddAsync(order, cancellationToken);
 
-            foreach (var item in cart.Items)
+            foreach (var item in cartItems)
             {
                 var orderItem = new OrderItem()
                 {
@@ -105,28 +124,31 @@ namespace OnlineClothingStore.Application.Features.Orders.Commands.Checkout
 
                 orderItem = await _orderItemRepository.AddAsync(orderItem, cancellationToken);
 
-                var productVariant = item.ProductVariant;
-                productVariant.StockQuantity -= item.Quantity;
-                productVariant.LastUpdatedAt = now;
-                await _productVariantRepository.UpdateAsync(productVariant, cancellationToken);
-                
-                var log = new InventoryLog()
-                {
-                    ProductVariantId = productVariant.Id,
-                    ChangeTypeId = (long)InventoryLogChangeType.Sale,
-                    ChangeQuantity = -item.Quantity,
-                    NewStockQuantity = productVariant.StockQuantity,
-                    Reason = "Sale",
-                    CreatedAt = now
-                };
-                await _inventoryLogRepository.AddAsync(log, cancellationToken);
+                await UpdateProductVariantStockAsync(item, now, cancellationToken);
 
                 order.Items.Add(orderItem);
             }
 
-            await _cartItemRepository.DeleteByCartIdAsync(cart.Id, cancellationToken);
+            return order;
+        }
 
-            return _mapper.Map<OrderDTO>(order);
+        private async Task UpdateProductVariantStockAsync(CartItem item, DateTime now, CancellationToken cancellationToken)
+        {
+            var productVariant = item.ProductVariant;
+            productVariant.StockQuantity -= item.Quantity;
+            productVariant.LastUpdatedAt = now;
+            await _productVariantRepository.UpdateAsync(productVariant, cancellationToken);
+
+            var log = new InventoryLog()
+            {
+                ProductVariantId = productVariant.Id,
+                ChangeTypeId = (long)InventoryLogChangeType.Sale,
+                ChangeQuantity = -item.Quantity,
+                NewStockQuantity = productVariant.StockQuantity,
+                Reason = "Sale",
+                CreatedAt = now
+            };
+            await _inventoryLogRepository.AddAsync(log, cancellationToken);
         }
     }
 }
