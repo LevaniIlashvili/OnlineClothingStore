@@ -53,8 +53,6 @@ namespace OnlineClothingStore.Application.Features.Orders.Commands.Checkout
             if (cart is null)
                 throw new Exceptions.NotFoundException("Cart not found");
 
-            cart.Items = (await _cartItemRepository.GetByCartIdAsync(cart.Id, cancellationToken)).ToList();
-
             if (!cart.Items.Any())
                 throw new Exceptions.BadRequestException("Cart is empty");
 
