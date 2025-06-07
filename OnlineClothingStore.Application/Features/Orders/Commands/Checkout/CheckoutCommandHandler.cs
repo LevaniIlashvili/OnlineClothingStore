@@ -1,5 +1,6 @@
 using AutoMapper;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using OnlineClothingStore.Application.Contracts.Infrastructure;
 using OnlineClothingStore.Application.Contracts.Infrastructure.Authentication;
 using OnlineClothingStore.Application.DTOs;
@@ -19,6 +20,7 @@ namespace OnlineClothingStore.Application.Features.Orders.Commands.Checkout
         private readonly IInventoryLogRepository _inventoryLogRepository;
         private readonly ICurrentUserService _currentUserService;
         private readonly IMapper _mapper;
+        private readonly ILogger<CheckoutCommandHandler> _logger;
 
         public CheckoutCommandHandler(
             ICartRepository cartRepository,
@@ -29,8 +31,8 @@ namespace OnlineClothingStore.Application.Features.Orders.Commands.Checkout
             IProductRepository productRepository,
             IInventoryLogRepository inventoryLogRepository,
             ICurrentUserService currentUserService,
-            IMapper mapper
-        )
+            IMapper mapper,
+            ILogger<CheckoutCommandHandler> logger)
         {
             _cartRepository = cartRepository;
             _cartItemRepository = cartItemRepository;
@@ -41,26 +43,36 @@ namespace OnlineClothingStore.Application.Features.Orders.Commands.Checkout
             _inventoryLogRepository = inventoryLogRepository;
             _currentUserService = currentUserService;
             _mapper = mapper;
+            _logger = logger;
         }
 
         public async Task<OrderDTO> Handle(CheckoutCommand request, CancellationToken cancellationToken)
         {
             var now = DateTime.UtcNow;
-
             var userId = _currentUserService.UserId;
-            var cart = await _cartRepository.GetByUserIdAsync(userId, cancellationToken);
 
+            _logger.LogInformation("Starting checkout process for user {UserId}", userId);
+
+            var cart = await _cartRepository.GetByUserIdAsync(userId, cancellationToken);
             if (cart is null)
+            {
+                _logger.LogWarning("Cart not found during checkout for user {UserId}", userId);
                 throw new Exceptions.NotFoundException("Cart not found");
+            }
 
             if (!cart.Items.Any())
+            {
+                _logger.LogWarning("Attempt to checkout with empty cart for user {UserId}", userId);
                 throw new Exceptions.BadRequestException("Cart is empty");
+            }
 
             await PopulateCartItemsWithProductVariantsAndProductsAsync(cart.Items, cancellationToken);
 
             var order = await CreateOrderAsync(cart.Items, userId, request.ShippingAddress, now, cancellationToken);
 
             await _cartItemRepository.DeleteByCartIdAsync(cart.Id, cancellationToken);
+
+            _logger.LogInformation("Checkout completed successfully for user {UserId}, OrderId: {OrderId}", userId, order.Id);
 
             return _mapper.Map<OrderDTO>(order);
         }
@@ -76,25 +88,34 @@ namespace OnlineClothingStore.Application.Features.Orders.Commands.Checkout
             foreach (var item in cartItems)
             {
                 if (!variants.TryGetValue(item.ProductVariantId, out var variant))
+                {
+                    _logger.LogWarning("Product variant with Id {ProductVariantId} not found", item.ProductVariantId);
                     throw new Exceptions.NotFoundException($"Product variant with Id {item.ProductVariantId} not found");
+                }
 
                 if (variant.StockQuantity < item.Quantity)
+                {
+                    _logger.LogWarning("Insufficient stock for variant {ProductVariantId}", variant.Id);
                     throw new Exceptions.BadRequestException($"Insufficient stock for variant {variant.Id}");
+                }
 
                 item.ProductVariant = variant;
 
                 if (!products.TryGetValue(variant.ProductId, out var product))
+                {
+                    _logger.LogWarning("Product with Id {ProductId} not found", variant.ProductId);
                     throw new Exceptions.NotFoundException($"Product with Id {variant.ProductId} not found");
+                }
 
                 item.ProductVariant.Product = product;
             }
         }
 
         private async Task<Order> CreateOrderAsync(
-            ICollection<CartItem> cartItems, 
+            ICollection<CartItem> cartItems,
             long userId,
-            string shippingAddress, 
-            DateTime now, 
+            string shippingAddress,
+            DateTime now,
             CancellationToken cancellationToken)
         {
             var orderTotalAmount = cartItems.Sum(i => i.ProductVariant.Product.Price * i.Quantity);
@@ -110,6 +131,7 @@ namespace OnlineClothingStore.Application.Features.Orders.Commands.Checkout
             };
 
             order = await _orderRepository.AddAsync(order, cancellationToken);
+            _logger.LogInformation("Order created with Id {OrderId} for user {UserId}", order.Id, userId);
 
             foreach (var item in cartItems)
             {
@@ -123,6 +145,7 @@ namespace OnlineClothingStore.Application.Features.Orders.Commands.Checkout
                 };
 
                 orderItem = await _orderItemRepository.AddAsync(orderItem, cancellationToken);
+                _logger.LogInformation("OrderItem created with Id {OrderItemId} for OrderId {OrderId}", orderItem.Id, order.Id);
 
                 await UpdateProductVariantStockAsync(item, now, cancellationToken);
 
@@ -149,6 +172,8 @@ namespace OnlineClothingStore.Application.Features.Orders.Commands.Checkout
                 CreatedAt = now
             };
             await _inventoryLogRepository.AddAsync(log, cancellationToken);
+
+            _logger.LogInformation("Updated stock for ProductVariantId {ProductVariantId}: new stock {NewStockQuantity}", productVariant.Id, productVariant.StockQuantity);
         }
     }
 }
