@@ -28,7 +28,12 @@ namespace OnlineClothingStore.Application.Features.Categories.Commands.DeleteCat
                 throw new Exceptions.ConflictException("Cannot delete category because it has subcategories");
             }
 
-            // TODO: check if has products
+            var hasProducts = await _categoryRepository.HasProductsAsync(existingCategory.Id, cancellationToken);
+            if (hasProducts)
+            {
+                throw new Exceptions.ConflictException("Cannot delete category because it has active products");
+            }
+
 
             await _categoryRepository.DeleteAsync(existingCategory, cancellationToken);
         }
