@@ -17,13 +17,40 @@ namespace OnlineClothingStore.Infrastructure.Repositories
         public async Task<Cart?> GetByIdAsync(long id, CancellationToken cancellationToken = default)
         {
             using var connection = _connectionFactory.CreateConnection();
-            var sql = @"
-                SELECT Id, UserId
-                FROM Cart
-                WHERE Id = @Id";
 
-            return await connection.QuerySingleOrDefaultAsync<Cart>(
-                new CommandDefinition(sql, new { Id = id }, cancellationToken: cancellationToken));
+            var sql = @"
+                SELECT 
+                    c.Id, c.UserId,
+                    ci.Id, ci.CartId, ci.ProductVariantId, ci.Quantity
+                FROM Cart c
+                LEFT JOIN CartItem ci ON c.Id = ci.CartId
+                WHERE c.Id = @Id;
+                ";
+
+            var cartDictionary = new Dictionary<long, Cart>();
+
+            var result = await connection.QueryAsync<Cart, CartItem, Cart>(
+                new CommandDefinition(sql, new { Id = id }, cancellationToken: cancellationToken),
+                (cart, cartItem) =>
+                {
+                    if (!cartDictionary.TryGetValue(cart.Id, out var currentCart))
+                    {
+                        currentCart = cart;
+                        currentCart.Items = new List<CartItem>();
+                        cartDictionary.Add(currentCart.Id, currentCart);
+                    }
+
+                    if (cartItem?.Id != 0 && cartItem is not null)
+                    {
+                        currentCart.Items.Add(cartItem);
+                    }
+
+                    return currentCart;
+                },
+                splitOn: "Id"
+            );
+
+            return result.FirstOrDefault();
         }
 
         public async Task<Cart?> GetByUserIdAsync(long userId, CancellationToken cancellationToken = default)
