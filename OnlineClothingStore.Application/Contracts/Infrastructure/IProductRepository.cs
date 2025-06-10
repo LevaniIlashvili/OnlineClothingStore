@@ -14,6 +14,7 @@ namespace OnlineClothingStore.Application.Contracts.Infrastructure
             CancellationToken cancellationToken = default);
         Task<Product?> GetByNameAsync(string name, CancellationToken cancellationToken = default);
         Task<Product?> GetBySkuPrefixAsync(string skuPrefix, CancellationToken cancellationToken = default);
+        Task<Product?> GetByVariantIdAsync(long variantId, CancellationToken cancellationToken = default);
         Task<bool> ProductExistsAsync(string name, string skuPrefix, CancellationToken cancellationToken = default);
         Task<Product> AddAsync(Product product, CancellationToken cancellationToken = default);
         Task UpdateAsync(Product product, CancellationToken cancellationToken = default);
