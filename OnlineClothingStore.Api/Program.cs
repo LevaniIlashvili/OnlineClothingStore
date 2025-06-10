@@ -14,6 +14,9 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddApplicationServices();
 
+Stripe.StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
+var stripeWebhookSecret = builder.Configuration["Stripe:WebhookSecret"];
+
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
 
 builder.Services.AddAuthentication(options =>
