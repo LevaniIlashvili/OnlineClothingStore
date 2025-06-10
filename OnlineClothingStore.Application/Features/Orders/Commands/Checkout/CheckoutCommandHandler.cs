@@ -49,7 +49,7 @@ namespace OnlineClothingStore.Application.Features.Orders.Commands.Checkout
         public async Task<OrderDTO> Handle(CheckoutCommand request, CancellationToken cancellationToken)
         {
             var now = DateTime.UtcNow;
-            var userId = _currentUserService.UserId;
+            var userId = request.UserId;
 
             _logger.LogInformation("Starting checkout process for user {UserId}", userId);
 
