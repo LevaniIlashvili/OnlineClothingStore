@@ -99,13 +99,28 @@ namespace OnlineClothingStore.Infrastructure.Repositories
         {
             using var connection = _connectionFactory.CreateConnection();
             string sql = @"
-                 SELECT Id, SkuPrefix, Description, Price, SkuPrefix,
+                 SELECT Id, Name, SkuPrefix, Description, Price,
                         CategoryId, BrandId
                  FROM Product
                  WHERE SkuPrefix = @SkuPrefix";
 
             return await connection.QuerySingleOrDefaultAsync<Product>(
                 new CommandDefinition(sql, new { SkuPrefix = skuPrefix }, cancellationToken: cancellationToken));
+        }
+
+        public async Task<Product?> GetByVariantIdAsync(long variantId, CancellationToken cancellationToken)
+        {
+            using var connection = _connectionFactory.CreateConnection();
+            string sql = @"
+                 SELECT Id, Name, SkuPrefix, Description, Price,
+                        CategoryId, BrandId
+                 FROM Product
+                 WHERE Id = (SELECT ProductId
+                       FROM ProductVariant
+                       WHERE Id = @VariantId)";
+
+            return await connection.QuerySingleOrDefaultAsync<Product>(
+                new CommandDefinition(sql, new { VariantId = variantId }, cancellationToken: cancellationToken));
         }
 
         public async Task<bool> ProductExistsAsync(string name, string skuPrefix, CancellationToken cancellationToken = default)
