@@ -56,7 +56,7 @@ namespace OnlineClothingStore.Application.UnitTests.Features.Orders.Commands
         public async Task Handle_EmptyCart_ThrowsBadRequestException()
         {
             // Arrange
-            var command = new CheckoutCommand { ShippingAddress = "123 Street" };
+            var command = new CheckoutCommand { UserId = 1, ShippingAddress = "123 Street" };
             var cart = new Cart { Id = 1, Items = new List<CartItem>() };
             _currentUserServiceMock.Setup(x => x.UserId).Returns(1);
             _cartRepositoryMock.Setup(x => x.GetByUserIdAsync(1, It.IsAny<CancellationToken>()))
@@ -71,7 +71,7 @@ namespace OnlineClothingStore.Application.UnitTests.Features.Orders.Commands
         public async Task Handle_InsufficientStock_ThrowsBadRequestException()
         {
             // Arrange
-            var command = new CheckoutCommand { ShippingAddress = "123 Street" };
+            var command = new CheckoutCommand { UserId = 1, ShippingAddress = "123 Street" };
 
             var productVariant = new ProductVariant() { Id = 10, StockQuantity = 0, ProductId = 1 };
             
@@ -99,7 +99,7 @@ namespace OnlineClothingStore.Application.UnitTests.Features.Orders.Commands
         public async Task Handle_ValidCheckout_ReturnsOrderDTO()
         {
             // Arrange
-            var command = new CheckoutCommand() { ShippingAddress = "address" };
+            var command = new CheckoutCommand() { UserId = 1, ShippingAddress = "address" };
             var variant = new ProductVariant { Id = 10, StockQuantity = 5, ProductId = 100, Product = new Product { Id = 100, Price = 25 } };
             var cartItem = new CartItem { ProductVariantId = 10, Quantity = 2, ProductVariant = variant };
             var cart = new Cart { Id = 1, Items = new List<CartItem> { cartItem } };

@@ -8,6 +8,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{20E6BBD0-2130-416A-89CB-6F041B27B787}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
+		.github\workflows\ci.yaml = .github\workflows\ci.yaml
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OnlineClothingStore.Domain", "OnlineClothingStore.Domain\OnlineClothingStore.Domain.csproj", "{88E01436-ED18-4870-9EDD-E32B1AAB72EC}"
